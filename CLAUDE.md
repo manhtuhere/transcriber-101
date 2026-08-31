@@ -138,6 +138,18 @@ Two things that look like details and are not:
   has its interval throttled, so a counter would drift and a 30-minute timer could run well
   past thirty minutes.
 
+## Keyboard shortcuts
+
+`useKeyboardShortcuts` binds single keys on the document. Two guards do the real work: a press
+inside an input, textarea, select or contenteditable belongs to that field, and a press
+carrying Ctrl/Cmd/Alt belongs to the browser. Without the first, typing a title into the search
+box would pause and skip the player on every space.
+
+Note that jsdom implements almost none of contenteditable — assigning `el.contentEditable` sets
+no attribute, `isContentEditable` is `undefined`, and the element cannot take focus. The guard
+therefore also matches on the attribute via `closest()`, and the test dispatches the event on
+the element rather than trying to focus it.
+
 ## Bookmarks (positions)
 
 `bookmarks` stores a spot in **book** seconds, not chapter seconds, matching the chapter-marker

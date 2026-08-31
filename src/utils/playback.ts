@@ -1,4 +1,4 @@
-import { POSITION_KEY_PREFIX } from '../constants/playback'
+import { DEFAULT_SPEED, PLAYBACK_SPEEDS, POSITION_KEY_PREFIX, SPEED_KEY } from '../constants/playback'
 import type { ChapterPosition, ManifestChapter } from '../types/manifest'
 
 /**
@@ -93,4 +93,30 @@ export function secondsToChapterEnd(
   const chapter = chapters.find((entry) => entry.idx === idx)
   if (!chapter) return 0
   return Math.max(chapter.durationSec - offsetInChapter, 0)
+}
+
+/**
+ * A stored speed is only usable if it is one we actually offer — a stale value
+ * from an older build, or a hand-edited one, must not put playback at 3x with
+ * no way to see why.
+ */
+export function parseSpeed(raw: string | null): number {
+  const speed = Number(raw)
+  return (PLAYBACK_SPEEDS as readonly number[]).includes(speed) ? speed : DEFAULT_SPEED
+}
+
+export function readSavedSpeed(): number {
+  try {
+    return parseSpeed(localStorage.getItem(SPEED_KEY))
+  } catch {
+    return DEFAULT_SPEED
+  }
+}
+
+export function saveSpeed(speed: number): void {
+  try {
+    localStorage.setItem(SPEED_KEY, String(speed))
+  } catch {
+    // Storage disabled: the preference simply will not survive a reload.
+  }
 }

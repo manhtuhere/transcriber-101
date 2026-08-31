@@ -109,8 +109,9 @@ npm run worker:watch  # or leave this running and it picks up new books itself
 7. **Bookmark** anything worth coming back to with the ribbon on its cover. The library then
    offers a Favourites filter and a "Favourites first" sort.
 
-The player has ±30s skip, a sleep timer (fixed durations or end of chapter), and lock-screen
-and headphone controls through the Media Session API. Skipping and the OS scrub bar both work
+The player has ±30s skip, a sleep timer (fixed durations or end of chapter), lock-screen and
+headphone controls through the Media Session API, and keyboard shortcuts — **space** to play or
+pause, **← →** to skip, **n / p** for chapters. Playback speed is remembered between sessions. Skipping and the OS scrub bar both work
 in **book** time, so a skip crosses chapter files and the lock screen shows progress through
 the whole book rather than restarting at each chapter.
 
@@ -232,9 +233,11 @@ Two things worth knowing before writing more of these:
 - **Positions are per-browser**, held in `localStorage` rather than the database, so resume
   does not follow you to another device.
 - **No cover art** — covers are generated from each book's title and chapter count.
-- An **intermittent integration failure**, seen twice, both times when integration ran straight
-  after the other suites. Clean on every isolated run. Cause unknown; the leading guess is
-  Supabase auth throttling from creating test users in quick succession.
+- An **intermittent integration failure**, now seen three times, always when integration ran
+  straight after the other suites, and never once across 30+ isolated runs. One or two tests
+  fail; which ones is still unknown, because every attempt to capture the output has come back
+  clean. The leading guess is Supabase auth throttling from creating test users in quick
+  succession.
 
 ## Documents
 

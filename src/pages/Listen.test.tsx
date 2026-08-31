@@ -296,3 +296,60 @@ describe('Media session', () => {
     expect(await screen.findByTestId('book-position')).toHaveTextContent('0:40')
   })
 })
+
+describe('Keyboard shortcuts', () => {
+  test('space plays and pauses', async () => {
+    await render()
+    await screen.findByText('Loomings')
+
+    await userEvent.keyboard(' ')
+    expect(audio().play).toHaveBeenCalled()
+  })
+
+  test('the arrows skip, in book time', async () => {
+    await render()
+    await screen.findByText('Loomings')
+
+    await act(async () => {
+      audio().currentTime = 10
+      audio().dispatchEvent(new Event('timeupdate'))
+    })
+    await userEvent.keyboard('{ArrowRight}')
+
+    expect(await screen.findByTestId('book-position')).toHaveTextContent('0:40')
+  })
+
+  test('n moves to the next chapter', async () => {
+    await render()
+    await screen.findByText('Loomings')
+
+    await userEvent.keyboard('n')
+    await waitFor(() => expect(audio().getAttribute('src')).toContain('1-bag.mp3'))
+  })
+})
+
+describe('Playback speed', () => {
+  test('is remembered between sessions', async () => {
+    await render()
+    await screen.findByText('Loomings')
+
+    await userEvent.selectOptions(screen.getByLabelText(/speed/i), '1.5')
+    expect(localStorage.getItem('speed')).toBe('1.5')
+  })
+
+  test('a stored speed is applied on load', async () => {
+    localStorage.setItem('speed', '1.75')
+    await render()
+    await screen.findByText('Loomings')
+
+    await waitFor(() => expect(audio().playbackRate).toBe(1.75))
+  })
+
+  test('a speed we no longer offer falls back to normal', async () => {
+    localStorage.setItem('speed', '3')
+    await render()
+    await screen.findByText('Loomings')
+
+    await waitFor(() => expect(audio().playbackRate).toBe(1))
+  })
+})

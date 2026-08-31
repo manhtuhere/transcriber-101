@@ -124,6 +124,10 @@ export default function PlayerControls({
           </FormField>
         </div>
       </div>
+
+      <p className="mt-4 font-data text-xs text-mute/70">
+        space play · ← → skip {skipSeconds}s · n / p chapter
+      </p>
     </div>
   )
 }

@@ -6,8 +6,8 @@ import BookmarkList from '../components/organisms/BookmarkList'
 import ChapterList from '../components/organisms/ChapterList'
 import PlayerControls from '../components/organisms/PlayerControls'
 import PageShell from '../components/templates/PageShell'
-import { DEFAULT_SPEED } from '../constants/playback'
 import { useAddBookmark } from '../hooks/useAddBookmark'
+import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts'
 import { useMediaSession } from '../hooks/useMediaSession'
 import { useSleepTimer } from '../hooks/useSleepTimer'
 import { useAudioUrl } from '../hooks/useAudioUrl'
@@ -16,7 +16,9 @@ import { useDeleteBookmark } from '../hooks/useDeleteBookmark'
 import { useManifest } from '../hooks/useManifest'
 import {
   readSavedPosition,
+  readSavedSpeed,
   savePosition,
+  saveSpeed,
   secondsToChapterEnd,
   SKIP_SECONDS,
   skipTo,
@@ -36,7 +38,7 @@ export default function Listen() {
   // manifest, done during render below.
   const [bookPosition, setBookPosition] = useState(() => readSavedPosition(id))
   const [chosenIdx, setChosenIdx] = useState<number | null>(null)
-  const [speed, setSpeed] = useState(DEFAULT_SPEED)
+  const [speed, setSpeed] = useState(readSavedSpeed)
   const [playing, setPlaying] = useState(false)
 
   /*
@@ -101,6 +103,22 @@ export default function Listen() {
     if (!manifest) return
     seekBook(skipTo(bookPosition, deltaSec, manifest.totalDurationSec))
   }
+
+  function changeSpeed(next: number) {
+    setSpeed(next)
+    saveSpeed(next)
+  }
+
+  useKeyboardShortcuts({
+    ' ': () => void togglePlay(),
+    k: () => void togglePlay(),
+    arrowleft: () => skip(-SKIP_SECONDS),
+    j: () => skip(-SKIP_SECONDS),
+    arrowright: () => skip(SKIP_SECONDS),
+    l: () => skip(SKIP_SECONDS),
+    p: () => selectChapter(activeIdx - 1),
+    n: () => selectChapter(activeIdx + 1),
+  })
 
   useMediaSession({
     title: manifest?.title ?? '',
@@ -208,7 +226,7 @@ export default function Listen() {
         onPrevious={() => selectChapter(activeIdx - 1)}
         onNext={() => selectChapter(activeIdx + 1)}
         onSeek={seekBook}
-        onSpeedChange={setSpeed}
+        onSpeedChange={changeSpeed}
         onBookmark={() => addBookmark.mutate({ positionSec: bookPosition })}
         bookmarking={addBookmark.isPending}
         onSkipBack={() => skip(-SKIP_SECONDS)}

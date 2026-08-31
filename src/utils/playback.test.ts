@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest'
 import type { ManifestChapter } from '../types/manifest'
 import {
+  parseSpeed,
   secondsToChapterEnd,
   skipTo,
   toBookPosition,
@@ -124,5 +125,27 @@ describe('secondsToChapterEnd', () => {
 
   test('handles an empty manifest without throwing', () => {
     expect(secondsToChapterEnd([], 10)).toBe(0)
+  })
+})
+
+describe('parseSpeed', () => {
+  test('accepts a speed we offer', () => {
+    expect(parseSpeed('1.5')).toBe(1.5)
+  })
+
+  test('falls back to normal speed for nothing stored', () => {
+    expect(parseSpeed(null)).toBe(1)
+  })
+
+  test('falls back for a value that is not a number', () => {
+    expect(parseSpeed('fast')).toBe(1)
+  })
+
+  // A stale value from an older build must not strand playback at a speed the
+  // picker cannot show.
+  test('falls back for a number we do not offer', () => {
+    expect(parseSpeed('3')).toBe(1)
+    expect(parseSpeed('0')).toBe(1)
+    expect(parseSpeed('-1')).toBe(1)
   })
 })
