@@ -1,0 +1,111 @@
+@import 'tailwindcss';
+
+/*
+  Transcriber — a private listening room.
+
+  The design is built around one idea: a book's shape is its duration. The
+  chapter timeline (proportional segments, real seconds) is the signature
+  element — static in the library, interactive as the scrubber on the player.
+
+  The `===================` rule is not decoration: 19 equals signs is this
+  product's actual chapter delimiter, the thing the parser looks for.
+
+  Everything below is tokens and the few things utilities genuinely cannot
+  express. Layout, spacing and colour live on the components as utility
+  classes, so a component carries its own spacing and none can forget it.
+*/
+
+@theme {
+  /* Lamp in the dark — you listen to a book at night. */
+  --color-night: #17182b;
+  --color-surface: #1f2138;
+  --color-surface-2: #2a2d48;
+  --color-vellum: #f0e9dc;
+  --color-mute: #8e8ca8;
+  --color-amber: #e9a23b;
+  --color-rose: #d6707a;
+  /* Ink for text sitting on amber — dark enough to read at small sizes. */
+  --color-ink: #241a08;
+
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-ui: 'Archivo', system-ui, sans-serif;
+  --font-data: 'IBM Plex Mono', ui-monospace, monospace;
+
+  /* The page column, and the gutter that keeps it off the edge on phones. */
+  --spacing-gutter: clamp(1.25rem, 0.6rem + 2.6vw, 2.75rem);
+  --container-measure: 64rem;
+
+  --text-display: clamp(2.25rem, 1.4rem + 3.6vw, 3.5rem);
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+    font-family: var(--font-ui);
+    font-size: 17px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    min-height: 100vh;
+    color: var(--color-vellum);
+    background:
+      /* a single warm pool of light, top-left, as if from a reading lamp */
+      radial-gradient(
+        120ch 70ch at 12% -18%,
+        color-mix(in srgb, var(--color-amber) 9%, transparent),
+        transparent 62%
+      ),
+      var(--color-night);
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    font-variation-settings: 'opsz' 120, 'SOFT' 40, 'WONK' 1;
+    line-height: 1.08;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-amber);
+    outline-offset: 3px;
+    border-radius: 3px;
+  }
+}
+
+/*
+  Fraunces set at a smaller optical size, for titles below display scale. The
+  variable axes are not something a utility can reach.
+*/
+@utility font-title {
+  font-family: var(--font-display);
+  font-variation-settings: 'opsz' 40, 'SOFT' 40, 'WONK' 1;
+}
+
+/*
+  A book's spine: dark at the hinge, catching light along the fore-edge. Three
+  layered shadows, which is past the point where an arbitrary utility value is
+  readable.
+*/
+@utility cover-spine {
+  box-shadow:
+    inset 3px 0 0 rgb(0 0 0 / 0.35),
+    inset 5px 0 0 color-mix(in srgb, var(--color-vellum) 8%, transparent),
+    0 8px 20px -12px rgb(0 0 0 / 0.9);
+}
+
+@utility cover-spine-raised {
+  box-shadow:
+    inset 3px 0 0 rgb(0 0 0 / 0.35),
+    inset 5px 0 0 color-mix(in srgb, var(--color-vellum) 8%, transparent),
+    0 14px 26px -12px rgb(0 0 0 / 0.95);
+}
+
+/* The playhead: an inset edge on the fill, because the segment clips overflow. */
+@utility playhead {
+  box-shadow: inset -2px 0 0 var(--color-vellum);
+}
