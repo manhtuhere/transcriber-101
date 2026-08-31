@@ -5,7 +5,7 @@ import { estimateCost, estimateRuntime } from './estimate'
 describe('estimateCost', () => {
   test('cost is chars / 1000 * the model rate', () => {
     // Verified against Deepgram pricing: Aura-2 is $0.030 per 1k characters.
-    expect(estimateCost(500_000, 'aura-2-thalia-en').usd).toBe(15)
+    expect(estimateCost(500_000, 'aura-2-athena-en').usd).toBe(15)
   })
 
   test('aura-1 costs half of aura-2 for the same text', () => {
@@ -13,11 +13,11 @@ describe('estimateCost', () => {
   })
 
   test('cost rounds to cents', () => {
-    expect(estimateCost(1234, 'aura-2-thalia-en').usd).toBe(0.04)
+    expect(estimateCost(1234, 'aura-2-athena-en').usd).toBe(0.04)
   })
 
   test('zero chars costs zero', () => {
-    expect(estimateCost(0, 'aura-2-thalia-en').usd).toBe(0)
+    expect(estimateCost(0, 'aura-2-athena-en').usd).toBe(0)
   })
 
   test('an unknown voice falls back to the most expensive known rate', () => {

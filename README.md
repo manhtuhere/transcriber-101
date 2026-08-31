@@ -113,6 +113,22 @@ book of roughly 500k characters runs about **$15 or $7.50**. The voice is chosen
 the upload preview shows the estimate before you commit. There is a 500k-character cap per
 book, checked before anything is written.
 
+### Voices
+
+Twenty to choose from, in two groups:
+
+- **Storytelling (Aura-2)** — the eight English voices Deepgram itself tags for storytelling,
+  including `draco` (warm British baritone) and `pluto` (smooth, calm baritone). Aura-2 has 37
+  English voices, but the rest carry use cases like IVR and customer service: tuned for a
+  two-second utterance, not four hours of prose.
+- **Classic (Aura-1)** — all twelve English voices at half the price, and the only place to
+  find British and Irish accents.
+
+The default is `aura-2-athena-en`, calm and smooth. The model id is the only lever Deepgram
+offers: there is no SSML and no parameter for rate, pitch or style.
+
+The voice is fixed when the book is created; changing it afterwards is not built yet.
+
 Storage is the other limit: mono mp3 at 64 kbps is about 28 MB per hour, so a 10-hour book is
 ~280 MB against Supabase's 1 GB free tier.
 

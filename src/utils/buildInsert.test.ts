@@ -7,7 +7,7 @@ const chapters: ParsedChapter[] = [
   { idx: 1, title: 'Two', body: 'second body', charCount: 11 },
 ]
 
-const meta = { title: 'A Book', author: 'An Author', voice: 'aura-2-thalia-en' }
+const meta = { title: 'A Book', author: 'An Author', voice: 'aura-2-athena-en' }
 
 describe('buildBookDraft', () => {
   test('book status is "processing" on queue', () => {
