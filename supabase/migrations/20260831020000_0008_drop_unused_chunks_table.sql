@@ -1,0 +1,14 @@
+-- The chunks table was written but never read.
+--
+-- It was meant to be a synthesis cache keyed on (text_hash, tts_voice), so a
+-- retry would not re-pay for chunks already produced. It could never work: the
+-- table records the text of each chunk but not its audio, and storing the
+-- audio is not viable either — a 1800-character chunk is about two minutes of
+-- speech, so caching one 500k-character book costs roughly 1.5 GB as PCM WAV
+-- or 260 MB as mp3, against a 1 GB storage tier, to save a few cents on a
+-- rare partial retry.
+--
+-- Chapter-level reuse already covers the common case: a chapter that reaches
+-- 'ready' is never claimed again. What remained was a per-chunk INSERT on the
+-- worker's hot path that bought nothing.
+drop table if exists public.chunks;

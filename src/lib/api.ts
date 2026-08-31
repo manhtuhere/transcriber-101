@@ -177,3 +177,28 @@ export async function deleteBookmark(id: string): Promise<void> {
   const { error } = await supabase.from('bookmarks').delete().eq('id', id)
   if (error) throw error
 }
+
+/**
+ * Delete a book, its chapters, and its audio.
+ *
+ * Storage has no foreign key, so the objects have to go first and explicitly:
+ * deleting the row cascades the chapter rows but would leave every mp3 and the
+ * manifest behind, invisible and still counting against the storage quota.
+ * Audio first, then the row — an orphaned object is recoverable by
+ * `npm run clean:storage`, an orphaned row is not.
+ */
+export async function deleteBook(bookId: string): Promise<void> {
+  const { data: files, error: listError } = await supabase.storage
+    .from('audio')
+    .list(bookId, { limit: 1000 })
+  if (listError) throw listError
+
+  const paths = (files ?? []).map((file) => `${bookId}/${file.name}`)
+  if (paths.length > 0) {
+    const { error: removeError } = await supabase.storage.from('audio').remove(paths)
+    if (removeError) throw removeError
+  }
+
+  const { error } = await supabase.from('books').delete().eq('id', bookId)
+  if (error) throw error
+}

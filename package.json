@@ -16,7 +16,8 @@
     "test:all": "vitest run --project unit --project ui --coverage && playwright test",
     "typecheck": "tsc --build",
     "worker": "tsx scripts/worker.ts",
-    "clean:storage": "tsx scripts/clean-test-storage.ts"
+    "clean:storage": "tsx scripts/clean-test-storage.ts",
+    "worker:watch": "tsx scripts/worker.ts --watch"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.4",

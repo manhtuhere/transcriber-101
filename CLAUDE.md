@@ -173,6 +173,20 @@ Chunks are requested from Deepgram as `encoding=linear16&container=wav` (those a
 separate parameters; there is no `encoding=wav`), concatenated as PCM, and encoded to mp3
 exactly once — stitching mp3 frames directly leaves gaps and a wrong VBR header.
 
+`--watch` polls every 15s so a book queued in the browser starts converting on its own. It
+polls rather than subscribing because the worker must also pick up work queued while it was
+not running, which a Realtime subscription would miss.
+
+There is deliberately **no per-chunk synthesis cache**. The `chunks` table used to be written
+on every chunk and never read; it could not have worked, because it recorded the text but not
+the audio, and caching chunk audio costs roughly 1.5 GB per book as PCM (260 MB as mp3)
+against a 1 GB tier, to save cents on a rare partial retry. Reuse is at the chapter level: a
+chapter that reaches `ready` is never claimed again. See migration 0008.
+
+Deleting a book must remove its Storage objects **before** the row. Storage has no foreign
+key, so cascading the row alone leaves every mp3 behind, invisible and still billed. An
+orphaned object is recoverable with `npm run clean:storage`; an orphaned row is not.
+
 Requires `ffmpeg` and `ffprobe` on PATH.
 
 ## Storage has no foreign key

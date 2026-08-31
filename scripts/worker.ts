@@ -4,6 +4,8 @@ import { assertFfmpeg } from './lib/audio'
 import { readWorkerEnv } from './lib/env'
 import { finalizeBookIfComplete, synthesizeChapter } from './lib/synthesize'
 
+const WATCH_INTERVAL_MS = 15_000
+
 /**
  * Drain the pending-chapter queue.
  *
@@ -16,10 +18,42 @@ async function main() {
   const env = readWorkerEnv()
   await assertFfmpeg()
 
+  const watch = process.argv.includes('--watch')
+
   const supabase = createClient<Database>(env.supabaseUrl, env.supabaseSecretKey, {
     auth: { autoRefreshToken: false, persistSession: false },
   })
 
+  if (!watch) {
+    await drain(supabase, env.deepgramApiKey)
+    return
+  }
+
+  // Watch mode closes the loop: queue a book in the browser and it starts
+  // converting without anyone remembering to run this. Polling rather than
+  // Realtime because the worker must also pick up work queued while it was
+  // not running, which a subscription would miss.
+  console.log(`Watching for pending chapters every ${WATCH_INTERVAL_MS / 1000}s. Ctrl-C to stop.`)
+
+  let stopping = false
+  process.on('SIGINT', () => {
+    console.log('\nFinishing the current chapter, then stopping…')
+    stopping = true
+  })
+
+  while (!stopping) {
+    await drain(supabase, env.deepgramApiKey, { quiet: true })
+    if (stopping) break
+    await new Promise((resume) => setTimeout(resume, WATCH_INTERVAL_MS))
+  }
+}
+
+/** One pass over the queue: claim, synthesize, finalize, until nothing is left. */
+async function drain(
+  supabase: ReturnType<typeof createClient<Database>>,
+  deepgramApiKey: string,
+  { quiet = false }: { quiet?: boolean } = {},
+) {
   const { data: released } = await supabase.rpc('release_stale_claims')
   if (released) console.log(`Released ${released} stale claim(s).`)
 
@@ -36,10 +70,7 @@ async function main() {
     console.log(`→ chapter ${chapter.idx + 1} "${chapter.title}" (${chapter.char_count} chars)`)
 
     try {
-      await synthesizeChapter(chapter, {
-        supabase,
-        deepgramApiKey: env.deepgramApiKey,
-      })
+      await synthesizeChapter(chapter, { supabase, deepgramApiKey })
       done += 1
       touchedBooks.add(chapter.book_id)
       console.log('  ready')
@@ -58,7 +89,8 @@ async function main() {
     }
   }
 
-  console.log(done === 0 ? 'Nothing pending.' : `Synthesized ${done} chapter(s).`)
+  if (done > 0) console.log(`Synthesized ${done} chapter(s).`)
+  else if (!quiet) console.log('Nothing pending.')
 }
 
 /** A book with no pending work left but a failed chapter is failed, not stuck. */

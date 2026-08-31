@@ -21,16 +21,6 @@ function slugify(title: string): string {
   )
 }
 
-/** FNV-1a, matching src/utils/hash.ts — the chunk cache key must agree. */
-function hashText(text: string): string {
-  let hash = 0x811c9dc5
-  for (let i = 0; i < text.length; i += 1) {
-    hash ^= text.charCodeAt(i)
-    hash = Math.imul(hash, 0x01000193)
-  }
-  return (hash >>> 0).toString(16).padStart(8, '0')
-}
-
 export interface SynthesizeDeps {
   supabase: Client
   deepgramApiKey: string
@@ -40,8 +30,10 @@ export interface SynthesizeDeps {
 /**
  * Turn one claimed chapter into an mp3 in Storage.
  *
- * Chunks already synthesized for the same (text_hash, tts_voice) are skipped,
- * so re-running after an edit only pays for what changed.
+ * Reuse is at the chapter level: a chapter that reaches 'ready' is never
+ * claimed again. There is deliberately no per-chunk cache — see migration
+ * 0008 — because caching chunk audio costs more in storage than the synthesis
+ * it would save.
  */
 export async function synthesizeChapter(
   chapter: ChapterRow,
@@ -83,7 +75,7 @@ export async function synthesizeChapter(
 
 async function synthesizeAll(
   pieces: string[],
-  { supabase, deepgramApiKey, concurrency }: Required<SynthesizeDeps>,
+  { deepgramApiKey, concurrency }: Required<SynthesizeDeps>,
   chapter: ChapterRow,
 ): Promise<Buffer[]> {
   const audio = new Array<Buffer>(pieces.length)
@@ -99,19 +91,6 @@ async function synthesizeAll(
         apiKey: deepgramApiKey,
         voice: chapter.tts_voice,
       })
-
-      await supabase.from('chunks').upsert(
-        {
-          chapter_id: chapter.id,
-          owner_id: chapter.owner_id,
-          idx: index,
-          text,
-          text_hash: hashText(text),
-          tts_voice: chapter.tts_voice,
-          status: 'ready',
-        },
-        { onConflict: 'chapter_id,idx' },
-      )
     }
   })
 

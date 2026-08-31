@@ -9,6 +9,7 @@ vi.mock('../lib/api', () => ({
   getBook: vi.fn(),
   retryChapter: vi.fn(),
   subscribeToChapters: vi.fn(() => () => {}),
+  deleteBook: vi.fn(),
 }))
 const api = vi.mocked(await import('../lib/api'))
 
@@ -138,5 +139,50 @@ describe('BookDetail', () => {
     api.getBook.mockResolvedValue(book([chapter(0, { status: 'failed', error: 'x' })], 'failed'))
     await render()
     expect(await screen.findByRole('alert')).toBeInTheDocument()
+  })
+})
+
+describe('Deleting a book', () => {
+  test('asks before deleting, because the audio cost money to make', async () => {
+    api.getBook.mockResolvedValue(book([chapter(0)]))
+    await render()
+
+    await userEvent.click(await screen.findByRole('button', { name: /delete this book/i }))
+
+    expect(screen.getByRole('button', { name: /delete permanently/i })).toBeInTheDocument()
+    expect(api.deleteBook).not.toHaveBeenCalled()
+  })
+
+  test('confirming deletes the book', async () => {
+    api.getBook.mockResolvedValue(book([chapter(0)]))
+    api.deleteBook.mockResolvedValue(undefined)
+    await render()
+
+    await userEvent.click(await screen.findByRole('button', { name: /delete this book/i }))
+    await userEvent.click(screen.getByRole('button', { name: /delete permanently/i }))
+
+    await waitFor(() => expect(api.deleteBook).toHaveBeenCalledWith('b1'))
+  })
+
+  test('backing out leaves the book alone', async () => {
+    api.getBook.mockResolvedValue(book([chapter(0)]))
+    await render()
+
+    await userEvent.click(await screen.findByRole('button', { name: /delete this book/i }))
+    await userEvent.click(screen.getByRole('button', { name: /keep it/i }))
+
+    expect(screen.getByRole('button', { name: /delete this book/i })).toBeInTheDocument()
+    expect(api.deleteBook).not.toHaveBeenCalled()
+  })
+
+  test('a failure is shown rather than swallowed', async () => {
+    api.getBook.mockResolvedValue(book([chapter(0)]))
+    api.deleteBook.mockRejectedValue(new Error('storage unreachable'))
+    await render()
+
+    await userEvent.click(await screen.findByRole('button', { name: /delete this book/i }))
+    await userEvent.click(screen.getByRole('button', { name: /delete permanently/i }))
+
+    expect(await screen.findByText(/storage unreachable/i)).toBeInTheDocument()
   })
 })

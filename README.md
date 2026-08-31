@@ -99,7 +99,8 @@ npm run dev          # http://localhost:5173
 4. Run the worker:
 
 ```bash
-npm run worker
+npm run worker        # convert what is queued, then exit
+npm run worker:watch  # or leave this running and it picks up new books itself
 ```
 
 5. Watch the book page fill in — chapter statuses stream over Realtime. Failed chapters get a
@@ -163,7 +164,8 @@ npm run test:int     # integration — needs SUPABASE_SECRET_KEY and ffmpeg
 npm run test:e2e     # Playwright, all projects
 npm run lint
 npm run build        # typechecks first, then bundles
-npm run worker       # drain the pending-chapter queue
+npm run worker       # drain the pending-chapter queue once
+npm run worker:watch # keep draining as books are queued
 npm run clean:storage -- --dry-run   # find audio whose book row is gone
 ```
 
@@ -220,7 +222,8 @@ Two things worth knowing before writing more of these:
 
 ## Known gaps
 
-- The **worker is manual**. Nothing runs it on a schedule; queue a book, then run it.
+- The **worker still needs a process running** — `npm run worker:watch` picks work up as it
+  is queued, but nothing starts that for you at boot. A systemd user unit would finish the job.
 - **Positions are per-browser**, held in `localStorage` rather than the database, so resume
   does not follow you to another device.
 - **No cover art** — covers are generated from each book's title and chapter count.
