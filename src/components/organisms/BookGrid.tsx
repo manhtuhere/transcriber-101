@@ -6,14 +6,20 @@ interface BookGridProps {
   books: BookSummary[]
   /** Saved position per book id, in seconds. */
   positions: Record<string, number>
-  /** True when books exist but the search hid them all. */
+  /** True when books exist but the search or filter hid them all. */
   filtered?: boolean
+  onToggleFavorite: (bookId: string, favorite: boolean) => void
 }
 
-export default function BookGrid({ books, positions, filtered = false }: BookGridProps) {
+export default function BookGrid({
+  books,
+  positions,
+  filtered = false,
+  onToggleFavorite,
+}: BookGridProps) {
   if (books.length === 0) {
     return filtered ? (
-      <p className="text-mute">No books match that search.</p>
+      <p className="text-mute">No books match that.</p>
     ) : (
       <div className="max-w-[38ch] border-y border-vellum/10 py-12 text-lg text-mute">
         <p>No books yet. Upload a transcript and it becomes something you can listen to.</p>
@@ -30,7 +36,12 @@ export default function BookGrid({ books, positions, filtered = false }: BookGri
   return (
     <div className="grid grid-cols-[repeat(auto-fill,minmax(8.5rem,1fr))] gap-x-4 gap-y-6 sm:grid-cols-[repeat(auto-fill,minmax(11rem,1fr))] sm:gap-x-6 sm:gap-y-8">
       {books.map((book) => (
-        <BookCard key={book.id} book={book} position={positions[book.id] ?? 0} />
+        <BookCard
+          key={book.id}
+          book={book}
+          position={positions[book.id] ?? 0}
+          onToggleFavorite={onToggleFavorite}
+        />
       ))}
     </div>
   )

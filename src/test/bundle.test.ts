@@ -34,12 +34,15 @@ describe.skipIf(!built)('production bundle', () => {
     expect(bundleText()).not.toMatch(/Token\s+[A-Za-z0-9]{32,}/)
   })
 
-  // The bypass branch must be compiled out, not merely unreachable.
-  test('contains no trace of the dev auth bypass', () => {
+  // The dev sign-in branch must be compiled out, not merely unreachable —
+  // it carries credentials.
+  test('contains no trace of the dev sign-in', () => {
     const text = bundleText()
-    expect(text).not.toContain('VITE_AUTH_BYPASS')
-    expect(text).not.toContain('dev:auth-bypass')
-    expect(text).not.toContain('Continue without signing in')
-    expect(text).not.toContain('developer bypass')
+    expect(text).not.toContain('VITE_DEV_EMAIL')
+    expect(text).not.toContain('VITE_DEV_PASSWORD')
+    expect(text).not.toContain('Sign in as developer')
+    // The api wrapper itself may survive as an inert export; that is fine,
+    // since supabase-js already exposes auth.signInWithPassword in the bundle.
+    // What must never ship is the credentials or the UI that uses them.
   })
 })

@@ -4,9 +4,9 @@ import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { renderWithProviders } from '../test/renderWithProviders'
 import Login from './Login'
 
-const enable = vi.fn()
-vi.mock('../hooks/useAuthBypass', () => ({
-  useAuthBypass: () => ({ active: false, enable, disable: vi.fn() }),
+const devSignIn = vi.fn()
+vi.mock('../hooks/useDevSignIn', () => ({
+  useDevSignIn: () => ({ mutate: devSignIn, isPending: false, error: null }),
 }))
 
 vi.mock('../lib/api', () => ({ signInWithOtp: vi.fn() }))
@@ -52,17 +52,15 @@ describe('Login', () => {
   })
 
   // The panel is dev-only; the tests run with import.meta.env.DEV true.
-  test('offers a developer bypass so /upload can be worked on without a session', async () => {
+  test('offers a developer sign-in that skips the email round trip', async () => {
     await renderWithProviders(<Login />)
-    expect(
-      screen.getByRole('button', { name: /continue without signing in/i }),
-    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /sign in as developer/i })).toBeInTheDocument()
   })
 
-  test('the bypass button turns the bypass on', async () => {
+  test('the developer button signs in for real, rather than faking a session', async () => {
     await renderWithProviders(<Login />)
-    await userEvent.click(screen.getByRole('button', { name: /continue without signing in/i }))
-    expect(enable).toHaveBeenCalledTimes(1)
+    await userEvent.click(screen.getByRole('button', { name: /sign in as developer/i }))
+    expect(devSignIn).toHaveBeenCalledTimes(1)
   })
 
   test('does not call signInWithOtp when the email field is empty', async () => {

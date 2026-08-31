@@ -1,75 +1,47 @@
 /**
- * Dev-only escape hatch: render protected routes without signing in.
+ * Dev-only shortcut past the magic link: sign in to a local account with a
+ * password, in one click.
  *
- * Two ways in, both dev-only — the `VITE_AUTH_BYPASS` env flag, and a button on
- * the sign-in page that writes to localStorage so it survives a reload without
- * restarting the dev server.
+ * This replaces an earlier "pretend to be signed in" bypass that rendered the
+ * app with **no** session. That version could read nothing (RLS returns no
+ * rows without a session) and, worse, let you reach Save & queue and press a
+ * button that could never succeed — the insert failed
+ * `with check (owner_id = auth.uid())` with a raw `42501`, because `auth.uid()`
+ * was null. A real session makes RLS behave in dev exactly as it does in
+ * production, which is the only version worth testing against.
  *
- * **Every call site must gate this behind a literal `import.meta.env.DEV`**, as
- * `import.meta.env.DEV && isAuthBypassed()`. Vite replaces that literal with
- * `false` at build time, so the whole branch — banner, button and all — folds
- * away and never reaches a production bundle. A bare `isAuthBypassed()` call
- * cannot fold, because a function's return value is not known at compile time,
- * and the branch would ship. `src/test/bundle.test.ts` checks the result.
- *
- * What it does NOT do: give you data. The bypass only skips the client-side
- * redirect. Supabase requests still go out unauthenticated, and RLS answers
- * them with empty results. It is for working on pages whose behaviour is
- * client-side — /upload especially, which parses the book entirely in the
- * browser — not for pretending to be signed in.
+ * **Every call site must gate this behind a literal `import.meta.env.DEV`.**
+ * Vite replaces that literal with `false` at build time, so the branch folds
+ * and the button, the credentials and this module never reach production. A
+ * bare function call cannot fold, because a return value is not known at
+ * compile time. Never pass `import.meta.env` around as an object either: Vite
+ * inlines the whole thing and the variable names survive even when the values
+ * are inert. `src/test/bundle.test.ts` checks the built output.
  */
 
-export const BYPASS_STORAGE_KEY = 'dev:auth-bypass'
+export interface DevCredentials {
+  email: string
+  password: string
+}
 
 /** The truth table, as a pure function, so it can be tested exhaustively. */
-export function shouldBypassAuth(
-  env: { DEV: boolean; VITE_AUTH_BYPASS?: string },
-  stored: boolean,
-): boolean {
-  return env.DEV && (env.VITE_AUTH_BYPASS === 'true' || stored)
+export function readDevCredentials(env: {
+  DEV: boolean
+  VITE_DEV_EMAIL?: string
+  VITE_DEV_PASSWORD?: string
+}): DevCredentials | null {
+  if (!env.DEV) return null
+  if (!env.VITE_DEV_EMAIL || !env.VITE_DEV_PASSWORD) return null
+  return { email: env.VITE_DEV_EMAIL, password: env.VITE_DEV_PASSWORD }
 }
 
-function readStoredFlag(): boolean {
-  try {
-    return localStorage.getItem(BYPASS_STORAGE_KEY) === 'true'
-  } catch {
-    // Private windows can throw on access; treat that as "not bypassed".
-    return false
-  }
-}
-
-/*
-  Each of these opens with a literal `import.meta.env.DEV` guard, and that shape
-  matters. Vite replaces the literal with `false` when building, so the guard
-  becomes `if (true) return`, everything after it is dead, and the storage key,
-  the reads and the writes are all dropped from the bundle.
-
-  Passing `import.meta.env` around as an object instead would defeat this: Vite
-  inlines the whole object, so the variable names survive in the output even
-  though the values are inert.
-*/
-export function isAuthBypassed(): boolean {
-  if (!import.meta.env.DEV) return false
-  return shouldBypassAuth(
-    { DEV: true, VITE_AUTH_BYPASS: import.meta.env.VITE_AUTH_BYPASS },
-    readStoredFlag(),
-  )
-}
-
-export function enableAuthBypass(): void {
-  if (!import.meta.env.DEV) return
-  try {
-    localStorage.setItem(BYPASS_STORAGE_KEY, 'true')
-  } catch {
-    // Nothing to do: without storage the bypass simply stays off.
-  }
-}
-
-export function disableAuthBypass(): void {
-  if (!import.meta.env.DEV) return
-  try {
-    localStorage.removeItem(BYPASS_STORAGE_KEY)
-  } catch {
-    // As above.
-  }
+/** The dev account, or null when the machine has not configured one. */
+export function devCredentials(): DevCredentials | null {
+  // Guard first, so the values are never inlined into a production build.
+  if (!import.meta.env.DEV) return null
+  return readDevCredentials({
+    DEV: true,
+    VITE_DEV_EMAIL: import.meta.env.VITE_DEV_EMAIL,
+    VITE_DEV_PASSWORD: import.meta.env.VITE_DEV_PASSWORD,
+  })
 }

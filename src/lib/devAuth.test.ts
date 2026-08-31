@@ -1,67 +1,35 @@
-// @vitest-environment jsdom
-//
-// The truth table below is pure, but the toggle reads and writes
-// localStorage, so this file opts into a DOM rather than pretending
-// otherwise. Everything else under src/**/*.test.ts still runs in node.
-import { beforeEach, describe, expect, test } from 'vitest'
-import {
-  BYPASS_STORAGE_KEY,
-  disableAuthBypass,
-  enableAuthBypass,
-  isAuthBypassed,
-  shouldBypassAuth,
-} from './devAuth'
+import { describe, expect, test } from 'vitest'
+import { readDevCredentials } from './devAuth'
 
-describe('shouldBypassAuth', () => {
-  test('is on in dev when the env flag is set', () => {
-    expect(shouldBypassAuth({ DEV: true, VITE_AUTH_BYPASS: 'true' }, false)).toBe(true)
+const both = { VITE_DEV_EMAIL: 'dev@local', VITE_DEV_PASSWORD: 'secret' }
+
+describe('readDevCredentials', () => {
+  test('returns the account when dev mode and both values are set', () => {
+    expect(readDevCredentials({ DEV: true, ...both })).toEqual({
+      email: 'dev@local',
+      password: 'secret',
+    })
   })
 
-  test('is on in dev when the button has been used, with no env flag', () => {
-    expect(shouldBypassAuth({ DEV: true }, true)).toBe(true)
+  // The one that matters: a production build must never hand back credentials,
+  // however the environment is configured.
+  test('returns null in a production build even with both values set', () => {
+    expect(readDevCredentials({ DEV: false, ...both })).toBeNull()
   })
 
-  // The one that matters: neither route may unlock a deployed build.
-  test('is off in a production build even when the env flag is set', () => {
-    expect(shouldBypassAuth({ DEV: false, VITE_AUTH_BYPASS: 'true' }, false)).toBe(false)
+  test('returns null when the email is missing', () => {
+    expect(readDevCredentials({ DEV: true, VITE_DEV_PASSWORD: 'secret' })).toBeNull()
   })
 
-  test('is off in a production build even when storage says otherwise', () => {
-    expect(shouldBypassAuth({ DEV: false }, true)).toBe(false)
+  test('returns null when the password is missing', () => {
+    expect(readDevCredentials({ DEV: true, VITE_DEV_EMAIL: 'dev@local' })).toBeNull()
   })
 
-  test('is off in dev with neither the flag nor the button', () => {
-    expect(shouldBypassAuth({ DEV: true }, false)).toBe(false)
+  test('returns null when neither is configured, so the button can explain itself', () => {
+    expect(readDevCredentials({ DEV: true })).toBeNull()
   })
 
-  test('is off in dev when the flag is anything but the string "true"', () => {
-    expect(shouldBypassAuth({ DEV: true, VITE_AUTH_BYPASS: 'false' }, false)).toBe(false)
-    expect(shouldBypassAuth({ DEV: true, VITE_AUTH_BYPASS: '1' }, false)).toBe(false)
-  })
-})
-
-describe('the toggle', () => {
-  beforeEach(() => localStorage.clear())
-
-  test('is off before the button is used', () => {
-    expect(isAuthBypassed()).toBe(false)
-  })
-
-  test('enable turns it on, disable turns it back off', () => {
-    enableAuthBypass()
-    expect(isAuthBypassed()).toBe(true)
-
-    disableAuthBypass()
-    expect(isAuthBypassed()).toBe(false)
-  })
-
-  test('survives a reload, because it lives in storage rather than memory', () => {
-    enableAuthBypass()
-    expect(localStorage.getItem(BYPASS_STORAGE_KEY)).toBe('true')
-  })
-
-  test('ignores a corrupt stored value rather than treating it as on', () => {
-    localStorage.setItem(BYPASS_STORAGE_KEY, 'sure')
-    expect(isAuthBypassed()).toBe(false)
+  test('treats an empty string as unset', () => {
+    expect(readDevCredentials({ DEV: true, VITE_DEV_EMAIL: '', VITE_DEV_PASSWORD: 'x' })).toBeNull()
   })
 })

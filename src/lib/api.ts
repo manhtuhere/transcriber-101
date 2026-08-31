@@ -16,6 +16,15 @@ export async function signInWithOtp(email: string): Promise<void> {
   if (error) throw error
 }
 
+/**
+ * Password sign-in. Used only by the dev shortcut on the sign-in page — the
+ * product itself authenticates with a magic link.
+ */
+export async function signInWithPassword(email: string, password: string): Promise<void> {
+  const { error } = await supabase.auth.signInWithPassword({ email, password })
+  if (error) throw error
+}
+
 export async function getSession(): Promise<Session | null> {
   const { data, error } = await supabase.auth.getSession()
   if (error) throw error
@@ -63,6 +72,21 @@ export async function createBook(draft: BookDraft): Promise<string> {
   }
 
   return book.id
+}
+
+/**
+ * Mark or unmark a book as a favourite.
+ *
+ * Writes a timestamp rather than a boolean, so the shelf can order by when it
+ * was marked. RLS needs no new policy: this is an update to a column on a row
+ * the caller already owns.
+ */
+export async function setFavorite(bookId: string, favorite: boolean): Promise<void> {
+  const { error } = await supabase
+    .from('books')
+    .update({ favorited_at: favorite ? new Date().toISOString() : null })
+    .eq('id', bookId)
+  if (error) throw error
 }
 
 export async function getBook(id: string): Promise<BookWithChapters> {

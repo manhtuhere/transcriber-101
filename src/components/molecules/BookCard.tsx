@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import type { BookSummary } from '../../types/book'
 import { formatLength, formatRemaining, percentComplete } from '../../utils/format'
+import FavoriteButton from '../atoms/FavoriteButton'
 import StatusBadge from '../atoms/StatusBadge'
 import BookCover from './BookCover'
 
@@ -8,9 +9,10 @@ interface BookCardProps {
   book: BookSummary
   /** Saved listening position in seconds, 0 if never opened. */
   position: number
+  onToggleFavorite: (bookId: string, favorite: boolean) => void
 }
 
-export default function BookCard({ book, position }: BookCardProps) {
+export default function BookCard({ book, position, onToggleFavorite }: BookCardProps) {
   const chapterCount = book.chapters[0]?.count ?? 0
   const ready = book.status === 'ready'
   const total = book.total_duration_sec ?? 0
@@ -19,8 +21,10 @@ export default function BookCard({ book, position }: BookCardProps) {
 
   const action = started ? 'Continue listening' : 'Start listening'
 
+  const favorite = book.favorited_at !== null
+
   return (
-    <article>
+    <article className="relative">
       {/*
         One link for the whole card: cover, title and action are a single hit
         target and a single tab stop. Two links to the same destination would
@@ -33,6 +37,7 @@ export default function BookCard({ book, position }: BookCardProps) {
         className="group block rounded-md text-inherit no-underline"
       >
         <BookCover title={book.title} chapterCount={chapterCount} percent={percent} size="sm" />
+
 
         <h2 className="mt-3 text-base leading-tight font-medium">{book.title}</h2>
         <p className="mt-1 text-sm text-mute">{book.author}</p>
@@ -59,6 +64,12 @@ export default function BookCard({ book, position }: BookCardProps) {
           </p>
         )}
       </Link>
+
+      <FavoriteButton
+        title={book.title}
+        favorite={favorite}
+        onToggle={() => onToggleFavorite(book.id, !favorite)}
+      />
     </article>
   )
 }

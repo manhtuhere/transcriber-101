@@ -1,12 +1,12 @@
-import DevBypassPanel from '../components/organisms/DevBypassPanel'
+import DevSignInPanel from '../components/organisms/DevSignInPanel'
 import MagicLinkForm from '../components/organisms/MagicLinkForm'
 import PageShell from '../components/templates/PageShell'
-import { useAuthBypass } from '../hooks/useAuthBypass'
+import { useDevSignIn } from '../hooks/useDevSignIn'
 import { useSignIn } from '../hooks/useSignIn'
 
 export default function Login() {
   const send = useSignIn()
-  const bypass = useAuthBypass()
+  const dev = useDevSignIn()
 
   return (
     <PageShell title="Sign in" narrow>
@@ -22,7 +22,13 @@ export default function Login() {
         `false` when building, so this whole branch — and the panel it imports —
         folds out of the production bundle.
       */}
-      {import.meta.env.DEV && <DevBypassPanel onEnable={bypass.enable} />}
+      {import.meta.env.DEV && (
+        <DevSignInPanel
+          onSignIn={() => dev.mutate()}
+          pending={dev.isPending}
+          error={dev.error}
+        />
+      )}
     </PageShell>
   )
 }

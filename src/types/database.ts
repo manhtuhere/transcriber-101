@@ -26,6 +26,7 @@ export type Database = {
           cover_url: string | null
           created_at: string
           description: string | null
+          favorited_at: string | null
           id: string
           owner_id: string
           source_hash: string | null
@@ -38,6 +39,7 @@ export type Database = {
           cover_url?: string | null
           created_at?: string
           description?: string | null
+          favorited_at?: string | null
           id?: string
           owner_id?: string
           source_hash?: string | null
@@ -50,6 +52,7 @@ export type Database = {
           cover_url?: string | null
           created_at?: string
           description?: string | null
+          favorited_at?: string | null
           id?: string
           owner_id?: string
           source_hash?: string | null

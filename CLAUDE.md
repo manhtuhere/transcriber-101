@@ -109,6 +109,19 @@ await renderWithProviders(<Listen />, { route: '/books/b1/listen', path: '/books
   enums, so the generator widens them to `string`; `api.ts` is the single place rows are cast
   to the narrowed types on the way in.
 
+## Bookmarks
+
+`books.favorited_at` is a nullable timestamp, not a boolean: null means "not bookmarked", and a
+value records when it was marked, so the shelf can sort by it without a second column.
+
+`useToggleFavorite` updates the cached list before the round trip finishes and restores it on
+failure — a bookmark that waits on the network feels broken. Filtering and sorting live in
+`utils/shelf.ts` as pure functions, so the shelf's behaviour is unit-tested without rendering.
+
+The star is a `<button>` and a **sibling** of the card's link, never a child. A card is one
+link and one tab stop; nesting interactive content inside an anchor is invalid HTML and would
+make the star unreachable by keyboard.
+
 ## Testing
 
 TDD: the tests come first, and a phase is done when they pass.
@@ -165,26 +178,22 @@ anything orphaned by an interrupted run. Worth remembering against a 1 GB free t
 worker and to tests only. The publishable key (`sb_publishable_…`) is browser-safe; RLS is
 what protects the data.
 
-## Dev auth bypass
+## Signing in during development
 
-Two ways in, both dev-only:
+`VITE_DEV_EMAIL` / `VITE_DEV_PASSWORD` back a "Sign in as developer" button on the sign-in
+page. It is a **real** Supabase session, so RLS applies exactly as in production.
 
-- **A button on the sign-in page** — "Continue without signing in". Writes a localStorage flag,
-  so it survives a reload with no `.env` edit and no server restart. The banner it puts on
-  every page carries a "Turn it off" control.
-- **`VITE_AUTH_BYPASS=true`** in `.env`, for a machine that should always start bypassed.
+Do not reintroduce a session-less bypass. The previous one rendered the app signed out, which
+meant reads returned nothing and writes failed with `42501 new row violates row-level security
+policy` — `auth.uid()` is null without a session, so `owner_id` defaults to null and fails the
+policy's `with check`. The error surfaced as a raw Postgres code on a button that could never
+succeed.
 
-It grants **no data**: requests still go out unauthenticated and RLS returns nothing. Use it
-for client-side pages, `/upload` above all.
-
-**Every call site must gate it behind a literal `import.meta.env.DEV`** —
-`import.meta.env.DEV && isAuthBypassed()`, and an `if (!import.meta.env.DEV) return` at the top
-of each function in `lib/devAuth.ts`. Vite replaces that literal with `false` at build time, so
-the branch folds and the button, banner and storage key never reach production. A bare
-`isAuthBypassed()` call cannot fold, because a return value is not known at compile time, and
-the code would ship. Never pass `import.meta.env` around as an object: Vite inlines the whole
-thing, so the variable names survive even when the values are inert.
-`src/test/bundle.test.ts` checks the built output for every one of those strings.
-
-Playwright forces the env flag off so the signed-out specs still exercise the real redirect;
-its browser contexts start with empty storage, so the button's flag is absent there too.
+**Every call site must gate this behind a literal `import.meta.env.DEV`** — and each function
+in `lib/devAuth.ts` opens with `if (!import.meta.env.DEV) return`. Vite replaces the literal
+with `false` at build time, so the branch folds and the button, the env var names and the
+credentials never reach production. A bare function call cannot fold, because a return value is
+not known at compile time. Never pass `import.meta.env` around as an object: Vite inlines the
+whole thing, so the variable names survive even when the values are inert.
+`src/test/bundle.test.ts` checks the built output — verified by putting real credentials in
+`.env`, building, and grepping for them.

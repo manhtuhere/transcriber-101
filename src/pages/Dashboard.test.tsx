@@ -1,10 +1,11 @@
-import { screen } from '@testing-library/react'
+import { screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { renderWithProviders } from '../test/renderWithProviders'
 import type { BookSummary } from '../types/book'
 import Dashboard from './Dashboard'
 
-vi.mock('../lib/api', () => ({ listBooks: vi.fn() }))
+vi.mock('../lib/api', () => ({ listBooks: vi.fn(), setFavorite: vi.fn() }))
 const api = vi.mocked(await import('../lib/api'))
 
 const book = (over: Partial<BookSummary> = {}): BookSummary =>
@@ -15,6 +16,7 @@ const book = (over: Partial<BookSummary> = {}): BookSummary =>
     status: 'ready',
     total_duration_sec: 7325,
     created_at: '2026-08-01T00:00:00Z',
+    favorited_at: null,
     chapters: [{ count: 12 }],
     ...over,
   }) as BookSummary
@@ -79,5 +81,71 @@ describe('Dashboard', () => {
     api.listBooks.mockRejectedValue(new Error('network down'))
     await renderWithProviders(<Dashboard />)
     expect(await screen.findByRole('alert')).toHaveTextContent(/network down/i)
+  })
+})
+
+describe('Favourites', () => {
+  test('a book can be bookmarked from its card', async () => {
+    api.listBooks.mockResolvedValue([book()])
+    api.setFavorite.mockResolvedValue(undefined)
+    await renderWithProviders(<Dashboard />)
+
+    await userEvent.click(
+      await screen.findByRole('button', { name: /add moby dick to favourites/i }),
+    )
+    await waitFor(() => expect(api.setFavorite).toHaveBeenCalledWith('b1', true))
+  })
+
+  test('a bookmarked book can be un-bookmarked', async () => {
+    api.listBooks.mockResolvedValue([book({ favorited_at: '2026-08-02T00:00:00Z' })])
+    api.setFavorite.mockResolvedValue(undefined)
+    await renderWithProviders(<Dashboard />)
+
+    await userEvent.click(
+      await screen.findByRole('button', { name: /remove moby dick from favourites/i }),
+    )
+    await waitFor(() => expect(api.setFavorite).toHaveBeenCalledWith('b1', false))
+  })
+
+  test('the star reflects state to assistive tech', async () => {
+    api.listBooks.mockResolvedValue([book({ favorited_at: '2026-08-02T00:00:00Z' })])
+    await renderWithProviders(<Dashboard />)
+
+    const star = await screen.findByRole('button', { name: /remove .* from favourites/i })
+    expect(star).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  test('the favourites filter appears only once something is bookmarked', async () => {
+    api.listBooks.mockResolvedValue([book()])
+    await renderWithProviders(<Dashboard />)
+    await screen.findByRole('heading', { name: 'Moby Dick' })
+
+    expect(screen.queryByRole('button', { name: /^favourites/i })).not.toBeInTheDocument()
+  })
+
+  test('the filter narrows the shelf to bookmarked books', async () => {
+    api.listBooks.mockResolvedValue([
+      book({ favorited_at: '2026-08-02T00:00:00Z' }),
+      book({ id: 'b2', title: 'Ulysses' }),
+    ])
+    await renderWithProviders(<Dashboard />)
+    expect(await screen.findAllByRole('article')).toHaveLength(2)
+
+    await userEvent.click(screen.getByRole('button', { name: /^favourites/i }))
+
+    expect(screen.getAllByRole('article')).toHaveLength(1)
+    expect(screen.getByRole('heading', { name: 'Moby Dick' })).toBeInTheDocument()
+  })
+
+  test('the shelf explains itself when the filter hides everything', async () => {
+    api.listBooks.mockResolvedValue([
+      book({ favorited_at: '2026-08-02T00:00:00Z' }),
+      book({ id: 'b2', title: 'Ulysses' }),
+    ])
+    await renderWithProviders(<Dashboard />)
+    await userEvent.click(await screen.findByRole('button', { name: /^favourites/i }))
+    await userEvent.type(screen.getByLabelText(/search/i), 'ulysses')
+
+    expect(await screen.findByText(/no books match/i)).toBeInTheDocument()
   })
 })

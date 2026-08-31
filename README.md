@@ -105,6 +105,8 @@ npm run worker
 5. Watch the book page fill in — chapter statuses stream over Realtime. Failed chapters get a
    Retry button.
 6. Listen. Position is saved per book in `localStorage`, so you resume where you stopped.
+7. **Bookmark** anything worth coming back to with the ribbon on its cover. The library then
+   offers a Favourites filter and a "Favourites first" sort.
 
 ### What it costs
 
@@ -134,17 +136,22 @@ Storage is the other limit: mono mp3 at 64 kbps is about 28 MB per hour, so a 10
 
 ### Dev auth bypass
 
-The sign-in page carries a **"Continue without signing in"** button in dev. One click and the
-protected routes render without a session — no `.env` edit, no server restart — with a banner
-on every page offering "Turn it off". Set `VITE_AUTH_BYPASS=true` instead if you want a machine
-to always start bypassed.
+### Signing in during development
 
-Useful when working on `/upload`, which parses the book entirely in the browser. It grants
-**no data**: requests still go out unauthenticated and RLS returns nothing.
+The sign-in page carries a **"Sign in as developer"** button in dev: one click, no magic-link
+round trip. Set `VITE_DEV_EMAIL` and `VITE_DEV_PASSWORD` in `.env` and create that user in
+Supabase (Authentication → Users → Add user, with **Auto Confirm User** on).
 
-It is compiled out of production builds — `import.meta.env.DEV` folds the branch away, and a
-test greps the built bundle for the button text, the banner and the storage key. Playwright
-forces it off so the signed-out specs still exercise the real redirect.
+It produces a **real session**, so your books load and row-level security applies exactly as it
+does in production. An earlier version faked a signed-out state instead; that could read
+nothing, and let you reach Save & queue and press a button that always failed with
+`42501 new row violates row-level security policy` — because `auth.uid()` was null, so
+`owner_id` defaulted to null and failed the policy's `with check`. Testing against a real
+session is the only version worth having.
+
+It is compiled out of production builds: `import.meta.env.DEV` folds the branch away, and a
+test greps the built bundle for the button text, the env var names and the credentials
+themselves.
 
 ## Development
 
