@@ -122,6 +122,16 @@ The star is a `<button>` and a **sibling** of the card's link, never a child. A 
 link and one tab stop; nesting interactive content inside an anchor is invalid HTML and would
 make the star unreachable by keyboard.
 
+## Bookmarks (positions)
+
+`bookmarks` stores a spot in **book** seconds, not chapter seconds, matching the chapter-marker
+scheme — the player resolves it with `toChapterPosition`, so a bookmark seeks across files.
+
+Its RLS policy carries the parent `EXISTS` check from the start. Without it, `owner_id`
+defaulting to `auth.uid()` lets anyone attach a row to someone else's book: invisible to that
+book's owner, but still there. That is the hole migration 0005 had to close on `chapters` and
+`chunks`; any new child table must be written this way.
+
 ## Testing
 
 TDD: the tests come first, and a phase is done when they pass.

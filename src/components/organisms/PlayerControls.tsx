@@ -19,6 +19,8 @@ interface PlayerControlsProps {
   onNext: () => void
   onSeek: (bookSeconds: number) => void
   onSpeedChange: (speed: number) => void
+  onBookmark: () => void
+  bookmarking?: boolean
 }
 
 export default function PlayerControls({
@@ -35,6 +37,8 @@ export default function PlayerControls({
   onNext,
   onSeek,
   onSpeedChange,
+  onBookmark,
+  bookmarking = false,
 }: PlayerControlsProps) {
   return (
     <div>
@@ -65,6 +69,9 @@ export default function PlayerControls({
         </Button>
         <Button variant="ghost" onClick={onNext} disabled={!canGoForward}>
           Next
+        </Button>
+        <Button variant="ghost" onClick={onBookmark} disabled={bookmarking}>
+          Bookmark this spot
         </Button>
 
         <div className="ml-auto">

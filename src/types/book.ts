@@ -16,6 +16,9 @@ export type BookWithChapters = Book & { chapters: Chapter[] }
 /** A book row as the dashboard needs it: counts, not full chapter text. */
 export type BookSummary = Book & { chapters: { count: number }[] }
 
+/** A saved spot inside a book, in whole-book seconds. */
+export type Bookmark = Tables<'bookmarks'>
+
 /** One chapter as produced by the splitter, before it reaches the database. */
 export interface ParsedChapter {
   idx: number

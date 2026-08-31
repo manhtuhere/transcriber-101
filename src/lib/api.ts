@@ -1,5 +1,5 @@
 import type { Session } from '@supabase/supabase-js'
-import type { BookSummary, BookWithChapters } from '../types/book'
+import type { Bookmark, BookSummary, BookWithChapters } from '../types/book'
 import type { Manifest } from '../types/manifest'
 import type { BookDraft } from '../utils/buildInsert'
 import { supabase } from './supabase'
@@ -149,4 +149,31 @@ export function subscribeToChapters(bookId: string, onChange: () => void): () =>
   return () => {
     void supabase.removeChannel(channel)
   }
+}
+
+/** Saved spots in a book, earliest first. */
+export async function listBookmarks(bookId: string): Promise<Bookmark[]> {
+  const { data, error } = await supabase
+    .from('bookmarks')
+    .select('*')
+    .eq('book_id', bookId)
+    .order('position_sec')
+  if (error) throw error
+  return data
+}
+
+export async function addBookmark(
+  bookId: string,
+  positionSec: number,
+  note?: string,
+): Promise<void> {
+  const { error } = await supabase
+    .from('bookmarks')
+    .insert({ book_id: bookId, position_sec: positionSec, note: note ?? null })
+  if (error) throw error
+}
+
+export async function deleteBookmark(id: string): Promise<void> {
+  const { error } = await supabase.from('bookmarks').delete().eq('id', id)
+  if (error) throw error
 }

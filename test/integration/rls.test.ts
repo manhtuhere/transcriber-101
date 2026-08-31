@@ -195,6 +195,43 @@ describe.skipIf(!configured)('row level security', () => {
     expect(moved).toBeNull()
   })
 
+  /*
+   * Bookmarks were written with the parent check from the start, rather than
+   * repeating the hole migration 0005 had to close on chapters and chunks.
+   */
+  test('owner can bookmark a spot in their own book', async () => {
+    const { error } = await alice
+      .from('bookmarks')
+      .insert({ book_id: aliceBookId, position_sec: 90 })
+    expect(error).toBeNull()
+  })
+
+  test("a non-owner cannot bookmark another user's book", async () => {
+    const { error } = await bob
+      .from('bookmarks')
+      .insert({ book_id: aliceBookId, position_sec: 90 })
+    expect(error).not.toBeNull()
+  })
+
+  test("a non-owner cannot read another user's bookmarks", async () => {
+    const { data } = await bob.from('bookmarks').select().eq('book_id', aliceBookId)
+    expect(data).toEqual([])
+  })
+
+  test('the worker view shows no bookmark that is not the book owner\'s', async () => {
+    await bob.from('bookmarks').insert({ book_id: aliceBookId, position_sec: 12 })
+
+    const { data } = await admin.from('bookmarks').select().eq('book_id', aliceBookId)
+    expect(data!.every((row) => row.owner_id === aliceId)).toBe(true)
+  })
+
+  test('a negative position is rejected by the check constraint', async () => {
+    const { error } = await alice
+      .from('bookmarks')
+      .insert({ book_id: aliceBookId, position_sec: -5 })
+    expect(error).not.toBeNull()
+  })
+
   test('audio bucket rejects anon download', async () => {
     const { error } = await anonClient().storage.from('audio').download('any/file.mp3')
     expect(error).not.toBeNull()

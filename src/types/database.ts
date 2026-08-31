@@ -20,6 +20,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      bookmarks: {
+        Row: {
+          book_id: string
+          created_at: string
+          id: string
+          note: string | null
+          owner_id: string
+          position_sec: number
+        }
+        Insert: {
+          book_id: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          owner_id?: string
+          position_sec: number
+        }
+        Update: {
+          book_id?: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          owner_id?: string
+          position_sec?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'bookmarks_book_id_fkey'
+            columns: ['book_id']
+            isOneToOne: false
+            referencedRelation: 'books'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       books: {
         Row: {
           author: string | null

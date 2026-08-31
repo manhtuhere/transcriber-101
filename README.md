@@ -224,8 +224,9 @@ Two things worth knowing before writing more of these:
 - **Positions are per-browser**, held in `localStorage` rather than the database, so resume
   does not follow you to another device.
 - **No cover art** — covers are generated from each book's title and chapter count.
-- One **intermittent integration failure** was seen once and never reproduced across eleven
-  subsequent runs; the cause is unknown. Most likely the realtime test's network timeout.
+- An **intermittent integration failure**, seen twice, both times when integration ran straight
+  after the other suites. Clean on every isolated run. Cause unknown; the leading guess is
+  Supabase auth throttling from creating test users in quick succession.
 
 ## Documents
 

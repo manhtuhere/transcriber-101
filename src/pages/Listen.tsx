@@ -2,11 +2,15 @@ import { useEffect, useRef, useState } from 'react'
 import { useParams } from '@tanstack/react-router'
 import Alert from '../components/atoms/Alert'
 import Spinner from '../components/atoms/Spinner'
+import BookmarkList from '../components/organisms/BookmarkList'
 import ChapterList from '../components/organisms/ChapterList'
 import PlayerControls from '../components/organisms/PlayerControls'
 import PageShell from '../components/templates/PageShell'
 import { DEFAULT_SPEED } from '../constants/playback'
+import { useAddBookmark } from '../hooks/useAddBookmark'
 import { useAudioUrl } from '../hooks/useAudioUrl'
+import { useBookmarks } from '../hooks/useBookmarks'
+import { useDeleteBookmark } from '../hooks/useDeleteBookmark'
 import { useManifest } from '../hooks/useManifest'
 import {
   readSavedPosition,
@@ -37,6 +41,10 @@ export default function Listen() {
     seeking to. While a seek is pending, timeupdate is ignored.
   */
   const pendingSeek = useRef<number | null>(null)
+
+  const bookmarks = useBookmarks(id)
+  const addBookmark = useAddBookmark(id)
+  const removeBookmark = useDeleteBookmark(id)
 
   const manifestQuery = useManifest(id)
   const manifest = manifestQuery.data
@@ -165,6 +173,15 @@ export default function Listen() {
         onNext={() => selectChapter(activeIdx + 1)}
         onSeek={seekBook}
         onSpeedChange={setSpeed}
+        onBookmark={() => addBookmark.mutate({ positionSec: bookPosition })}
+        bookmarking={addBookmark.isPending}
+      />
+
+      <BookmarkList
+        bookmarks={bookmarks.data ?? []}
+        onSeek={seekBook}
+        onDelete={(bookmarkId) => removeBookmark.mutate(bookmarkId)}
+        deleting={removeBookmark.isPending}
       />
 
       <ChapterList chapters={manifest.chapters} activeIdx={activeIdx} onSelect={selectChapter} />

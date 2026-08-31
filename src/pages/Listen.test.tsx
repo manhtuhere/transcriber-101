@@ -6,7 +6,13 @@ import type { Manifest } from '../types/manifest'
 import { positionKey } from '../utils/playback'
 import Listen from './Listen'
 
-vi.mock('../lib/api', () => ({ getManifest: vi.fn(), signAudioUrl: vi.fn() }))
+vi.mock('../lib/api', () => ({
+  getManifest: vi.fn(),
+  signAudioUrl: vi.fn(),
+  listBookmarks: vi.fn(),
+  addBookmark: vi.fn(),
+  deleteBookmark: vi.fn(),
+}))
 const api = vi.mocked(await import('../lib/api'))
 
 const manifest: Manifest = {
@@ -31,6 +37,9 @@ beforeEach(() => {
   vi.clearAllMocks()
   api.getManifest.mockResolvedValue(manifest)
   api.signAudioUrl.mockImplementation(async (path: string) => `https://cdn.test/${path}`)
+  api.listBookmarks.mockResolvedValue([])
+  api.addBookmark.mockResolvedValue(undefined)
+  api.deleteBookmark.mockResolvedValue(undefined)
 })
 
 describe('Listen', () => {
@@ -133,5 +142,67 @@ describe('Listen', () => {
     await render()
 
     expect(await screen.findByRole('alert')).toHaveTextContent(/manifest missing/i)
+  })
+})
+
+describe('Bookmarks', () => {
+  const spot = (over = {}) => ({
+    id: 'bm1',
+    book_id: 'b1',
+    owner_id: 'u1',
+    position_sec: 150,
+    note: null,
+    created_at: '2026-08-31T00:00:00Z',
+    ...over,
+  })
+
+  test('saves the current spot in book time, not chapter time', async () => {
+    await render()
+    await userEvent.click(await screen.findByRole('button', { name: /The Carpet-Bag/ }))
+
+    audio().currentTime = 30
+    audio().dispatchEvent(new Event('timeupdate'))
+
+    await userEvent.click(screen.getByRole('button', { name: /bookmark this spot/i }))
+
+    // Chapter 1 starts at 120s, so 30s in is 150s into the book.
+    await waitFor(() => expect(api.addBookmark).toHaveBeenCalledWith('b1', 150, undefined))
+  })
+
+  test('lists saved spots with their book timecode', async () => {
+    api.listBookmarks.mockResolvedValue([spot()])
+    await render()
+
+    expect(await screen.findByText('2:30')).toBeInTheDocument()
+  })
+
+  test('nothing is shown when there are no bookmarks', async () => {
+    await render()
+    await screen.findByText('Loomings')
+    expect(screen.queryByRole('heading', { name: /bookmarks/i })).not.toBeInTheDocument()
+  })
+
+  test('playing a bookmark seeks across chapter files to that spot', async () => {
+    api.listBookmarks.mockResolvedValue([spot({ position_sec: 220 })])
+    await render()
+
+    await userEvent.click(await screen.findByRole('button', { name: /play from 3:40/i }))
+
+    // 220s lands in chapter 3, which starts at 210s.
+    await waitFor(() => expect(audio().getAttribute('src')).toContain('2-inn.mp3'))
+  })
+
+  test('a bookmark can be removed', async () => {
+    api.listBookmarks.mockResolvedValue([spot()])
+    await render()
+
+    await userEvent.click(await screen.findByRole('button', { name: /remove bookmark at 2:30/i }))
+    await waitFor(() => expect(api.deleteBookmark).toHaveBeenCalledWith('bm1'))
+  })
+
+  test('a note is shown when one was saved', async () => {
+    api.listBookmarks.mockResolvedValue([spot({ note: 'the whale appears' })])
+    await render()
+    expect(await screen.findByText('the whale appears')).toBeInTheDocument()
   })
 })

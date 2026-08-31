@@ -12,4 +12,5 @@ export const keys = {
   book: (id: string) => ['book', id] as const,
   manifest: (id: string) => ['manifest', id] as const,
   audio: (path: string | undefined) => ['audio', path] as const,
+  bookmarks: (bookId: string) => ['bookmarks', bookId] as const,
 }
