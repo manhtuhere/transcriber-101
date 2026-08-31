@@ -8,6 +8,8 @@ import PlayerControls from '../components/organisms/PlayerControls'
 import PageShell from '../components/templates/PageShell'
 import { DEFAULT_SPEED } from '../constants/playback'
 import { useAddBookmark } from '../hooks/useAddBookmark'
+import { useMediaSession } from '../hooks/useMediaSession'
+import { useSleepTimer } from '../hooks/useSleepTimer'
 import { useAudioUrl } from '../hooks/useAudioUrl'
 import { useBookmarks } from '../hooks/useBookmarks'
 import { useDeleteBookmark } from '../hooks/useDeleteBookmark'
@@ -15,6 +17,9 @@ import { useManifest } from '../hooks/useManifest'
 import {
   readSavedPosition,
   savePosition,
+  secondsToChapterEnd,
+  SKIP_SECONDS,
+  skipTo,
   toBookPosition,
   toChapterPosition,
 } from '../utils/playback'
@@ -81,6 +86,37 @@ export default function Listen() {
       setChosenIdx(target.idx)
     }
   }
+
+  function pause() {
+    audioRef.current?.pause()
+  }
+
+  async function play() {
+    await audioRef.current?.play().catch(() => undefined)
+  }
+
+  const sleep = useSleepTimer(pause)
+
+  function skip(deltaSec: number) {
+    if (!manifest) return
+    seekBook(skipTo(bookPosition, deltaSec, manifest.totalDurationSec))
+  }
+
+  useMediaSession({
+    title: manifest?.title ?? '',
+    author: manifest?.author ?? null,
+    playing,
+    bookPosition,
+    bookDuration: manifest?.totalDurationSec ?? 0,
+    speed,
+    onPlay: play,
+    onPause: pause,
+    onSkipBack: () => skip(-SKIP_SECONDS),
+    onSkipForward: () => skip(SKIP_SECONDS),
+    onPreviousChapter: () => selectChapter(activeIdx - 1),
+    onNextChapter: () => selectChapter(activeIdx + 1),
+    onSeekTo: seekBook,
+  })
 
   async function togglePlay() {
     const element = audioRef.current
@@ -175,6 +211,13 @@ export default function Listen() {
         onSpeedChange={setSpeed}
         onBookmark={() => addBookmark.mutate({ positionSec: bookPosition })}
         bookmarking={addBookmark.isPending}
+        onSkipBack={() => skip(-SKIP_SECONDS)}
+        onSkipForward={() => skip(SKIP_SECONDS)}
+        skipSeconds={SKIP_SECONDS}
+        sleepRemainingSec={sleep.remainingSec}
+        chapterRemainingSec={secondsToChapterEnd(manifest.chapters, bookPosition)}
+        onSleepStart={sleep.start}
+        onSleepCancel={sleep.cancel}
       />
 
       <BookmarkList

@@ -4,6 +4,7 @@ import Button from '../atoms/Button'
 import { INPUT_STYLE } from '../atoms/TextInput'
 import ChapterTimeline from '../molecules/ChapterTimeline'
 import FormField from '../molecules/FormField'
+import SleepTimer from './SleepTimer'
 
 interface PlayerControlsProps {
   chapters: ManifestChapter[]
@@ -21,6 +22,13 @@ interface PlayerControlsProps {
   onSpeedChange: (speed: number) => void
   onBookmark: () => void
   bookmarking?: boolean
+  onSkipBack: () => void
+  onSkipForward: () => void
+  skipSeconds: number
+  sleepRemainingSec: number | null
+  chapterRemainingSec: number
+  onSleepStart: (seconds: number) => void
+  onSleepCancel: () => void
 }
 
 export default function PlayerControls({
@@ -39,6 +47,13 @@ export default function PlayerControls({
   onSpeedChange,
   onBookmark,
   bookmarking = false,
+  onSkipBack,
+  onSkipForward,
+  skipSeconds,
+  sleepRemainingSec,
+  chapterRemainingSec,
+  onSleepStart,
+  onSleepCancel,
 }: PlayerControlsProps) {
   return (
     <div>
@@ -64,6 +79,17 @@ export default function PlayerControls({
           </svg>
         </button>
 
+        <Button variant="ghost" onClick={onSkipBack} aria-label={`Back ${skipSeconds} seconds`}>
+          −{skipSeconds}s
+        </Button>
+        <Button
+          variant="ghost"
+          onClick={onSkipForward}
+          aria-label={`Forward ${skipSeconds} seconds`}
+        >
+          +{skipSeconds}s
+        </Button>
+
         <Button variant="ghost" onClick={onPrevious} disabled={!canGoBack}>
           Previous
         </Button>
@@ -74,7 +100,14 @@ export default function PlayerControls({
           Bookmark this spot
         </Button>
 
-        <div className="ml-auto">
+        <div className="ml-auto flex flex-wrap items-center gap-4">
+          <SleepTimer
+            remainingSec={sleepRemainingSec}
+            chapterRemainingSec={chapterRemainingSec}
+            onStart={onSleepStart}
+            onCancel={onSleepCancel}
+          />
+
           <FormField htmlFor="speed" label="Speed" inline>
             <select
               id="speed"

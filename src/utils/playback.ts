@@ -70,3 +70,27 @@ export function savePosition(bookId: string, seconds: number): void {
     // Storage disabled: resume is a convenience, not a requirement.
   }
 }
+
+/** How far the skip controls move, in seconds. */
+export const SKIP_SECONDS = 30
+
+/**
+ * Skip forward or back in book time, clamped to the book.
+ *
+ * Book time, not chapter time, so skipping past the end of a chapter lands in
+ * the next one rather than stopping at a file boundary.
+ */
+export function skipTo(bookPosition: number, deltaSec: number, totalSec: number): number {
+  return Math.min(Math.max(bookPosition + deltaSec, 0), Math.max(totalSec, 0))
+}
+
+/** Seconds left in the chapter containing `bookPosition`, for an end-of-chapter timer. */
+export function secondsToChapterEnd(
+  chapters: ManifestChapter[],
+  bookPosition: number,
+): number {
+  const { idx, offsetInChapter } = toChapterPosition(chapters, bookPosition)
+  const chapter = chapters.find((entry) => entry.idx === idx)
+  if (!chapter) return 0
+  return Math.max(chapter.durationSec - offsetInChapter, 0)
+}

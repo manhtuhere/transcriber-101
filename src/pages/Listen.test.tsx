@@ -1,7 +1,8 @@
-import { screen, waitFor } from '@testing-library/react'
+import { act, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { renderWithProviders } from '../test/renderWithProviders'
+import { mediaSessionHandlers } from '../test/setup'
 import type { Manifest } from '../types/manifest'
 import { positionKey } from '../utils/playback'
 import Listen from './Listen'
@@ -204,5 +205,94 @@ describe('Bookmarks', () => {
     api.listBookmarks.mockResolvedValue([spot({ note: 'the whale appears' })])
     await render()
     expect(await screen.findByText('the whale appears')).toBeInTheDocument()
+  })
+})
+
+describe('Skip controls', () => {
+  test('forward moves the book on by 30 seconds', async () => {
+    await render()
+    await screen.findByText('Loomings')
+
+    audio().currentTime = 10
+    audio().dispatchEvent(new Event('timeupdate'))
+    await userEvent.click(screen.getByRole('button', { name: /forward 30 seconds/i }))
+
+    expect(await screen.findByTestId('book-position')).toHaveTextContent('0:40')
+  })
+
+  test('back moves the book back by 30 seconds', async () => {
+    await render()
+    await userEvent.click(await screen.findByRole('button', { name: /The Carpet-Bag/ }))
+
+    audio().currentTime = 30
+    audio().dispatchEvent(new Event('timeupdate'))
+    await userEvent.click(screen.getByRole('button', { name: /back 30 seconds/i }))
+
+    // 150s in the book, minus 30, is 2:00.
+    expect(await screen.findByTestId('book-position')).toHaveTextContent('2:00')
+  })
+
+  // The point of skipping in book time rather than chapter time.
+  test('skipping forward crosses into the next chapter file', async () => {
+    await render()
+    await screen.findByText('Loomings')
+
+    audio().currentTime = 110
+    audio().dispatchEvent(new Event('timeupdate'))
+    await userEvent.click(screen.getByRole('button', { name: /forward 30 seconds/i }))
+
+    await waitFor(() => expect(audio().getAttribute('src')).toContain('1-bag.mp3'))
+  })
+
+  test('back at the very start clamps to zero rather than going negative', async () => {
+    await render()
+    await screen.findByText('Loomings')
+
+    await userEvent.click(screen.getByRole('button', { name: /back 30 seconds/i }))
+    expect(await screen.findByTestId('book-position')).toHaveTextContent('0:00')
+  })
+})
+
+describe('Media session', () => {
+  test('publishes the book title and author to the lock screen', async () => {
+    await render()
+    await screen.findByText('Loomings')
+
+    const metadata = navigator.mediaSession.metadata as unknown as {
+      title: string
+      artist?: string
+    }
+    expect(metadata.title).toBe('Moby Dick')
+    expect(metadata.artist).toBe('Herman Melville')
+  })
+
+  test('reports whole-book position, not the position in one chapter file', async () => {
+    await render()
+    await userEvent.click(await screen.findByRole('button', { name: /The Carpet-Bag/ }))
+
+    audio().currentTime = 30
+    audio().dispatchEvent(new Event('timeupdate'))
+
+    await waitFor(() =>
+      expect(navigator.mediaSession.setPositionState).toHaveBeenCalledWith(
+        expect.objectContaining({ duration: 270, position: 150 }),
+      ),
+    )
+  })
+
+  test('a headphone skip moves the book, not just the file', async () => {
+    await render()
+    await screen.findByText('Loomings')
+
+    // Both are outside React's event system, so each needs an explicit act().
+    await act(async () => {
+      audio().currentTime = 10
+      audio().dispatchEvent(new Event('timeupdate'))
+    })
+    await act(async () => {
+      mediaSessionHandlers.get('seekforward')!()
+    })
+
+    expect(await screen.findByTestId('book-position')).toHaveTextContent('0:40')
   })
 })

@@ -1,6 +1,11 @@
 import { describe, expect, test } from 'vitest'
 import type { ManifestChapter } from '../types/manifest'
-import { toBookPosition, toChapterPosition } from './playback'
+import {
+  secondsToChapterEnd,
+  skipTo,
+  toBookPosition,
+  toChapterPosition,
+} from './playback'
 
 const chapter = (idx: number, startOffsetSec: number, durationSec: number): ManifestChapter => ({
   idx,
@@ -70,5 +75,54 @@ describe('the two are inverses', () => {
         })
       }
     }
+  })
+})
+
+describe('skipTo', () => {
+  test('moves forward by the delta', () => {
+    expect(skipTo(100, 30, 270)).toBe(130)
+  })
+
+  test('moves back by the delta', () => {
+    expect(skipTo(100, -30, 270)).toBe(70)
+  })
+
+  // Book time, so a skip near a chapter edge crosses into the next file.
+  test('crosses a chapter boundary rather than stopping at it', () => {
+    // Chapter 0 ends at 120s; skipping forward from 110 lands inside chapter 1.
+    const next = skipTo(110, 30, 270)
+    expect(next).toBe(140)
+    expect(toChapterPosition(chapters, next).idx).toBe(1)
+  })
+
+  test('clamps at the start of the book', () => {
+    expect(skipTo(10, -30, 270)).toBe(0)
+  })
+
+  test('clamps at the end of the book', () => {
+    expect(skipTo(260, 30, 270)).toBe(270)
+  })
+
+  test('a zero-length book clamps to zero', () => {
+    expect(skipTo(0, 30, 0)).toBe(0)
+  })
+})
+
+describe('secondsToChapterEnd', () => {
+  test('counts from the current spot to the end of that chapter', () => {
+    // 30s into a 120s first chapter.
+    expect(secondsToChapterEnd(chapters, 30)).toBe(90)
+  })
+
+  test('is the full duration at a chapter start', () => {
+    expect(secondsToChapterEnd(chapters, 120)).toBe(90)
+  })
+
+  test('is zero at the very end of the book', () => {
+    expect(secondsToChapterEnd(chapters, 270)).toBe(0)
+  })
+
+  test('handles an empty manifest without throwing', () => {
+    expect(secondsToChapterEnd([], 10)).toBe(0)
   })
 })

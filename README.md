@@ -109,6 +109,11 @@ npm run worker:watch  # or leave this running and it picks up new books itself
 7. **Bookmark** anything worth coming back to with the ribbon on its cover. The library then
    offers a Favourites filter and a "Favourites first" sort.
 
+The player has ±30s skip, a sleep timer (fixed durations or end of chapter), and lock-screen
+and headphone controls through the Media Session API. Skipping and the OS scrub bar both work
+in **book** time, so a skip crosses chapter files and the lock screen shows progress through
+the whole book rather than restarting at each chapter.
+
 ### What it costs
 
 Deepgram Aura is **$0.030 per 1k characters** (Aura-2) or **$0.0150** (Aura-1), so a ~300-page

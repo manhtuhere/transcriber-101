@@ -122,6 +122,22 @@ The star is a `<button>` and a **sibling** of the card's link, never a child. A 
 link and one tab stop; nesting interactive content inside an anchor is invalid HTML and would
 make the star unreachable by keyboard.
 
+## Player
+
+Skipping, the sleep timer and Media Session all work in **book** time, never chapter time.
+`skipTo` clamps to the book, so ±30s crosses a chapter boundary into the next file, and
+`setPositionState` reports whole-book position so the lock-screen scrub bar does not reset at
+every chapter.
+
+Two things that look like details and are not:
+
+- `useMediaSession` keeps its callbacks in a ref and registers handlers **once**. Depending on
+  them directly re-registers all seven several times a second during playback, and a handler
+  captured between renders holds a stale position — which is exactly the bug the tests caught.
+- `useSleepTimer` holds a wall-clock deadline rather than counting ticks. A backgrounded tab
+  has its interval throttled, so a counter would drift and a 30-minute timer could run well
+  past thirty minutes.
+
 ## Bookmarks (positions)
 
 `bookmarks` stores a spot in **book** seconds, not chapter seconds, matching the chapter-marker
