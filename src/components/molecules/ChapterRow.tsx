@@ -12,22 +12,25 @@ export default function ChapterRow({ chapter, onRename, onRemove }: ChapterRowPr
   const position = chapter.idx + 1
 
   return (
-    <tr className="border-b border-vellum/10 hover:bg-surface">
-      <td className="px-3 py-2 font-data text-xs text-mute">{position}</td>
-      <td className="px-3 py-2">
+    <tr className="border-b border-rule last:border-0 hover:bg-linen/40">
+      <td className="py-2 pr-3 pl-4 font-data text-xs text-muted">
+        {String(position).padStart(2, '0')}
+      </td>
+      <td className="py-2 pr-3">
         <TextInput
           aria-label={`Chapter ${position} title`}
           value={chapter.title}
           onChange={(event) => onRename(chapter.idx, event.target.value)}
-          className="max-w-none border-transparent bg-transparent px-2 py-1.5 hover:bg-surface-2 focus:bg-surface-2"
+          className="font-title max-w-none border-transparent bg-transparent px-2 py-1.5
+            text-base hover:border-rule hover:bg-card focus:bg-card"
         />
       </td>
-      <td data-testid="char-count" className="px-3 py-2 font-data text-xs text-mute">
-        {chapter.charCount}
+      <td data-testid="char-count" className="py-2 pr-3 font-data text-xs text-muted">
+        {chapter.charCount.toLocaleString()}
       </td>
-      <td className="px-3 py-2 text-right">
+      <td className="py-2 pr-4 text-right">
         <Button
-          variant="ghost"
+          variant="bare"
           aria-label={`Remove chapter ${position}`}
           onClick={() => onRemove(chapter.idx)}
         >

@@ -39,7 +39,7 @@ beforeEach(() => vi.clearAllMocks())
 describe('Upload preview', () => {
   test('shows an empty state before a file is chosen', async () => {
     await renderWithProviders(<Upload />)
-    expect(screen.getByText(/no file chosen/i)).toBeInTheDocument()
+    expect(screen.getByText(/chapters will be listed here/i)).toBeInTheDocument()
     expect(chapterRows()).toHaveLength(0)
   })
 

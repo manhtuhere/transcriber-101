@@ -13,8 +13,11 @@ interface FormFieldProps {
  *  remember to wire `htmlFor` to `id` by hand. */
 export default function FormField({ htmlFor, label, children, inline }: FormFieldProps) {
   return (
-    <div className={inline ? 'flex items-center gap-3' : 'flex flex-col gap-2'}>
-      <label htmlFor={htmlFor} className="text-sm tracking-[0.09em] text-mute uppercase">
+    <div className={inline ? 'flex items-center gap-2.5' : 'flex flex-col gap-1.5'}>
+      <label
+        htmlFor={htmlFor}
+        className="font-data text-[0.68rem] tracking-[0.1em] text-muted uppercase"
+      >
         {label}
       </label>
       {children}

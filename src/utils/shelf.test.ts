@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import type { BookSummary } from '../types/book'
-import { isFavorite, sortBooks, visibleBooks } from './shelf'
+import { isFavorite, shelfStats, sortBooks, visibleBooks } from './shelf'
 
 const book = (over: Partial<BookSummary>): BookSummary =>
   ({
@@ -96,5 +96,29 @@ describe('sortBooks', () => {
     const original = [...shelf]
     sortBooks(shelf, 'title')
     expect(shelf).toEqual(original)
+  })
+})
+
+describe('shelfStats', () => {
+  test('counts the shelf and adds up its running time', () => {
+    expect(shelfStats(shelf)).toEqual({
+      total: 3,
+      ready: 3,
+      processing: 0,
+      totalSeconds: 1100,
+    })
+  })
+
+  test('separates books that cannot be played yet', () => {
+    const stats = shelfStats([...shelf, book({ id: '9', status: 'processing', total_duration_sec: null })])
+    expect(stats).toMatchObject({ total: 4, ready: 3, processing: 1 })
+  })
+
+  test('treats an unknown duration as nothing, rather than NaN', () => {
+    expect(shelfStats([book({ id: '9', total_duration_sec: null })]).totalSeconds).toBe(0)
+  })
+
+  test('an empty shelf is all zeroes', () => {
+    expect(shelfStats([])).toEqual({ total: 0, ready: 0, processing: 0, totalSeconds: 0 })
   })
 })

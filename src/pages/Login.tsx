@@ -9,7 +9,7 @@ export default function Login() {
   const dev = useDevSignIn()
 
   return (
-    <PageShell title="Sign in" narrow>
+    <PageShell title="Sign in" narrow lede="Your library is private to you.">
       <MagicLinkForm
         onSubmit={(email) => send.mutate(email)}
         pending={send.isPending}

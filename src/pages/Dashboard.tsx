@@ -4,12 +4,13 @@ import Spinner from '../components/atoms/Spinner'
 import BookGrid from '../components/organisms/BookGrid'
 import ContinueListening from '../components/organisms/ContinueListening'
 import LibraryToolbar from '../components/organisms/LibraryToolbar'
+import ShelfSummary from '../components/organisms/ShelfSummary'
 import PageShell from '../components/templates/PageShell'
 import { useBooks } from '../hooks/useBooks'
 import { useToggleFavorite } from '../hooks/useToggleFavorite'
 import { percentComplete } from '../utils/format'
 import { readSavedPosition } from '../utils/playback'
-import { isFavorite, sortBooks, visibleBooks, type SortKey } from '../utils/shelf'
+import { isFavorite, shelfStats, sortBooks, visibleBooks, type SortKey } from '../utils/shelf'
 
 /** Far enough in to be worth resuming, not so far it is effectively finished. */
 const IN_PROGRESS_MIN = 1
@@ -38,16 +39,17 @@ export default function Dashboard() {
     return percent >= IN_PROGRESS_MIN && percent <= IN_PROGRESS_MAX
   })
 
+  const stats = shelfStats(books)
   const favoriteCount = books.filter(isFavorite).length
   const visible = useMemo(
     () => sortBooks(visibleBooks(books, { query, favoritesOnly }), sort),
     [books, query, favoritesOnly, sort],
   )
 
-  if (isPending) return <Spinner label="Loading your books…" />
+  if (isPending) return <Spinner label="Opening your library…" />
 
   return (
-    <PageShell title="Your library">
+    <PageShell title="Your library" lede={<ShelfSummary stats={stats} />}>
       {error && <Alert>{error.message}</Alert>}
       {favorite.error && <Alert>{favorite.error.message}</Alert>}
 

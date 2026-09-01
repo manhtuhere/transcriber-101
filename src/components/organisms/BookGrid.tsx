@@ -19,13 +19,23 @@ export default function BookGrid({
 }: BookGridProps) {
   if (books.length === 0) {
     return filtered ? (
-      <p className="text-mute">No books match that.</p>
+      <p className="py-10 text-center text-muted">
+        Nothing here matches. Try a different search, or clear the favourites filter.
+      </p>
     ) : (
-      <div className="max-w-[38ch] border-y border-vellum/10 py-12 text-lg text-mute">
-        <p>No books yet. Upload a transcript and it becomes something you can listen to.</p>
+      <div className="rounded-md border border-dashed border-rule bg-card/60 px-6 py-14 text-center">
+        <p className="font-title mx-auto max-w-[36ch] text-xl">
+          Your shelf is empty. Upload a transcript and it comes back as something you can
+          listen to.
+        </p>
+        <p className="mx-auto mt-3 max-w-[42ch] text-sm text-muted">
+          Any <code className="font-data text-ink">.txt</code> file works, with chapters
+          separated by a line of 19 equals signs.
+        </p>
         <Link
           to="/upload"
-          className="mt-6 inline-block border-b border-current text-base text-amber no-underline"
+          className="mt-6 inline-block rounded-md border border-cloth bg-cloth px-5 py-2.5
+            text-sm font-medium text-card no-underline transition-colors hover:bg-cloth-soft"
         >
           Add your first book
         </Link>
@@ -34,7 +44,10 @@ export default function BookGrid({
   }
 
   return (
-    <div className="grid grid-cols-[repeat(auto-fill,minmax(8.5rem,1fr))] gap-x-4 gap-y-6 sm:grid-cols-[repeat(auto-fill,minmax(11rem,1fr))] sm:gap-x-6 sm:gap-y-8">
+    <div
+      className="grid grid-cols-[repeat(auto-fill,minmax(8.5rem,1fr))] gap-x-5 gap-y-9
+        sm:grid-cols-[repeat(auto-fill,minmax(10.5rem,1fr))] sm:gap-x-7 sm:gap-y-11"
+    >
       {books.map((book) => (
         <BookCard
           key={book.id}

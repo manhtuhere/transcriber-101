@@ -21,11 +21,12 @@ export default function BookMetaForm({
   onVoiceChange,
 }: BookMetaFormProps) {
   return (
-    <div className="space-y-6">
+    <div className="grid gap-5 rounded-md border border-rule bg-card p-6 sm:grid-cols-2">
       <FormField htmlFor="title" label="Title">
         <TextInput
           id="title"
           value={title}
+          placeholder="Moby-Dick"
           onChange={(event) => onTitleChange(event.target.value)}
         />
       </FormField>
@@ -34,18 +35,21 @@ export default function BookMetaForm({
         <TextInput
           id="author"
           value={author}
+          placeholder="Herman Melville"
           onChange={(event) => onAuthorChange(event.target.value)}
         />
       </FormField>
 
-      <FormField htmlFor="voice" label="Voice">
-        <Select
-          id="voice"
-          options={VOICES}
-          value={voice}
-          onChange={(event) => onVoiceChange(event.target.value)}
-        />
-      </FormField>
+      <div className="sm:col-span-2">
+        <FormField htmlFor="voice" label="Narrator">
+          <Select
+            id="voice"
+            options={VOICES}
+            value={voice}
+            onChange={(event) => onVoiceChange(event.target.value)}
+          />
+        </FormField>
+      </div>
     </div>
   )
 }

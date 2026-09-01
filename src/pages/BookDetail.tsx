@@ -31,7 +31,7 @@ export default function BookDetail() {
 
   return (
     <PageShell title={book.title}>
-      <p className="text-mute !mt-3">{book.author}</p>
+      <p className="-mt-2 text-muted">{book.author}</p>
 
       {book.status === 'failed' && (
         <Alert>Some chapters failed to synthesize. Retry them below.</Alert>
@@ -42,8 +42,13 @@ export default function BookDetail() {
           <Link
             to="/books/$id/listen"
             params={{ id: book.id }}
-            className="border-b border-current text-amber no-underline"
+            className="inline-flex items-center gap-2 rounded-md border border-cloth bg-cloth
+              px-5 py-2.5 text-sm font-medium text-card no-underline transition-colors
+              hover:bg-cloth-soft"
           >
+            <svg viewBox="0 0 24 24" aria-hidden="true" className="size-3.5 fill-current">
+              <path d="M8 5l12 7-12 7z" />
+            </svg>
             Listen
           </Link>
         </p>

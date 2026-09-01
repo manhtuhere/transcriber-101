@@ -27,14 +27,15 @@ export default function MagicLinkForm({
   }
 
   return (
-    <div className="space-y-6">
-      <form onSubmit={submit} className="space-y-6">
+    <div className="space-y-5">
+      <form onSubmit={submit} className="space-y-5">
         <FormField htmlFor="email" label="Email">
           <TextInput
             id="email"
             name="email"
             type="email"
             autoComplete="email"
+            placeholder="you@example.com"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
           />
@@ -44,7 +45,11 @@ export default function MagicLinkForm({
         </Button>
       </form>
 
-      {sent && <p className="text-mute">Check your email for the sign-in link.</p>}
+      {sent && (
+        <p className="rounded-md border border-cloth/30 bg-cloth/8 px-4 py-3 text-sm">
+          Check your email for the sign-in link.
+        </p>
+      )}
       {error && <Alert>{error.message}</Alert>}
     </div>
   )

@@ -62,9 +62,24 @@ pass; move the code instead.
 ## Styling
 
 Tailwind v4, wired through `@tailwindcss/vite`. `src/index.css` holds only tokens
-(`@theme`), base element styles, and the three `@utility` helpers utilities genuinely cannot
-express — the spine shadow, the Fraunces optical-size axis, and the timeline playhead.
+(`@theme`), base element styles, and the few `@utility` helpers utilities genuinely cannot
+express — the cased-book shadow, the Literata optical-size axis, and the timeline playhead.
 Everything else is utility classes on the component.
+
+The palette is **bookcloth, not editorial cream**: oatmeal paper, warm ink, and the deep green
+of a library hardback. **Ochre is reserved** for the one thing that is alive — audio playing,
+progress through a book, a saved spot. Spending it anywhere else costs the player its only
+signal. Type is **Literata**, which was drawn for reading books on a screen.
+
+The **banded cover** is the signature. Books here are transcripts and will never have cover
+art, so `BookCover` prints a Pelican-style band from what the book actually is: a cloth colour
+hashed from the title, the chapter count on the head band, the running time on the foot. The
+bands carry real data rather than ornament.
+
+The cover is `aria-hidden` — it is a picture of a book — so anything printed on it must also
+appear as text in the caption beside it, or it exists only as pixels. It deliberately prints
+*less* at shelf size for that reason: duplicating the author and duration put them in the page
+twice.
 
 - **Spacing is set by the container, not by the child.** `PageShell` owns the page rhythm with
   `space-y-6`; a section carries no top margin of its own. A component that has to remember its

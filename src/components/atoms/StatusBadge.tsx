@@ -10,12 +10,12 @@ const LABELS: Record<BookStatus | ChapterStatus, string> = {
 }
 
 const TONES: Record<BookStatus | ChapterStatus, string> = {
-  draft: 'text-mute',
-  pending: 'text-mute',
-  processing: 'text-vellum',
-  synthesizing: 'text-vellum',
-  ready: 'text-amber',
-  failed: 'text-rose',
+  draft: 'border-rule bg-linen/70 text-muted',
+  pending: 'border-rule bg-linen/70 text-muted',
+  processing: 'border-ochre/40 bg-ochre/10 text-ochre',
+  synthesizing: 'border-ochre/40 bg-ochre/10 text-ochre',
+  ready: 'border-cloth/30 bg-cloth/8 text-cloth',
+  failed: 'border-oxblood/35 bg-oxblood/8 text-oxblood',
 }
 
 /** A working book pulses; a finished one is steady. */
@@ -28,7 +28,8 @@ interface StatusBadgeProps {
 export default function StatusBadge({ status }: StatusBadgeProps) {
   return (
     <span
-      className={`inline-flex items-center gap-2 font-data text-xs tracking-[0.1em] uppercase ${TONES[status]}`}
+      className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5
+        font-data text-[0.65rem] tracking-[0.08em] uppercase ${TONES[status]}`}
     >
       <span
         className={`size-1.5 rounded-full bg-current ${

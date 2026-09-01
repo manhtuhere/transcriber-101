@@ -9,7 +9,7 @@ interface FavoriteButtonProps {
  *
  * A button, not a link, and a sibling of the card's link rather than a child:
  * nesting interactive content inside an anchor is invalid, and it would make
- * the star unreachable by keyboard.
+ * the ribbon unreachable by keyboard.
  */
 export default function FavoriteButton({ title, favorite, onToggle }: FavoriteButtonProps) {
   return (
@@ -18,18 +18,14 @@ export default function FavoriteButton({ title, favorite, onToggle }: FavoriteBu
       aria-pressed={favorite}
       aria-label={favorite ? `Remove ${title} from favourites` : `Add ${title} to favourites`}
       onClick={onToggle}
-      className={`absolute top-2 right-2 grid size-8 cursor-pointer place-items-center
-        rounded-full backdrop-blur-sm transition-colors
-        ${favorite ? 'bg-night/60 text-amber' : 'bg-night/40 text-vellum/60 hover:text-vellum'}`}
+      className={`absolute top-0 right-3 z-10 h-8 w-[18px] cursor-pointer
+        drop-shadow-[0_1px_2px_rgb(34_31_26_/_0.35)] transition-[height,filter]
+        hover:h-9 motion-reduce:transition-none
+        ${favorite ? 'text-ochre' : 'text-ink/25 hover:text-ink/45'}`}
     >
-      <svg viewBox="0 0 24 24" aria-hidden="true" className="size-4">
-        <path
-          d="M7 3h10a1 1 0 0 1 1 1v17l-6-4-6 4V4a1 1 0 0 1 1-1z"
-          fill={favorite ? 'currentColor' : 'none'}
-          stroke="currentColor"
-          strokeWidth="1.6"
-          strokeLinejoin="round"
-        />
+      {/* A ribbon marker tucked into the head of the book. */}
+      <svg viewBox="0 0 18 32" aria-hidden="true" className="h-full w-full fill-current">
+        <path d="M0 0h18v32l-9-7-9 7z" />
       </svg>
     </button>
   )

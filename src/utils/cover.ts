@@ -6,11 +6,12 @@ import { hashText } from './hash'
   derived from its own title, the way a cloth-bound edition is recognisable
   before you can read the spine.
 
-  Only the hue varies. Saturation and lightness are fixed so a full shelf reads
-  as one collection and stays legible against the night background.
+  Only the hue varies. Saturation and lightness are fixed at bookcloth values —
+  deep and slightly muted, never poster-bright — so a full shelf reads as one
+  collection and every band holds paper-white text at small sizes.
 */
-export const COVER_SATURATION = 26
-export const COVER_LIGHTNESS = 24
+export const COVER_SATURATION = 34
+export const COVER_LIGHTNESS = 30
 
 export function coverHue(seed: string): number {
   // hashText is FNV-1a, whose low bits avalanche poorly — titles that differ

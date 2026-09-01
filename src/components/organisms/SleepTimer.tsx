@@ -24,8 +24,8 @@ export default function SleepTimer({
 }: SleepTimerProps) {
   if (remainingSec !== null) {
     return (
-      <div className="flex items-center gap-3">
-        <span className="font-data text-xs text-amber" role="status">
+      <div className="flex items-center gap-2.5 rounded-md border border-ochre/40 bg-ochre/10 px-3 py-1.5">
+        <span className="font-data text-xs text-ink" role="status">
           Sleeping in {formatDuration(remainingSec)}
         </span>
         <Button variant="bare" onClick={onCancel}>

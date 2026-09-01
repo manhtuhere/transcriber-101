@@ -19,9 +19,11 @@ export default function DevSignInPanel({
   error = null,
 }: DevSignInPanelProps) {
   return (
-    <div className="space-y-4 rounded-[10px] border border-dashed border-amber/40 p-4">
-      <p className="font-data text-xs tracking-[0.14em] text-amber uppercase">Developer</p>
-      <p className="text-sm text-mute">
+    <div className="space-y-3 rounded-md border border-dashed border-rule bg-linen/40 p-4">
+      <p className="font-data text-[0.62rem] tracking-[0.12em] text-muted uppercase">
+        Developer
+      </p>
+      <p className="text-sm text-muted">
         Sign in to the local dev account without waiting for an email. It is a real session,
         so your books load and row-level security applies as normal.
       </p>
@@ -29,8 +31,8 @@ export default function DevSignInPanel({
         type="button"
         onClick={onSignIn}
         disabled={pending}
-        className="cursor-pointer rounded-full border border-amber/50 bg-transparent px-4 py-2
-          text-sm font-medium text-amber transition-colors hover:bg-amber/10
+        className="cursor-pointer rounded-md border border-rule bg-card px-4 py-2 text-sm
+          font-medium text-ink transition-colors hover:bg-linen/70
           disabled:cursor-not-allowed disabled:opacity-40"
       >
         {pending ? 'Signing in…' : 'Sign in as developer'}

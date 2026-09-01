@@ -81,13 +81,20 @@ export default function Upload() {
     chapters.length > 0 && title.trim() !== '' && author.trim() !== '' && !queue.isPending
 
   return (
-    <PageShell title="Add a book">
+    <PageShell
+      title="Add a book"
+      lede="Drop in a transcript and it comes back as an audiobook. Chapters are split on a line of 19 equals signs."
+    >
       <FilePicker label="Book file" onSelect={onSelect} />
 
       {error && <Alert>{error}</Alert>}
       {queue.error && <Alert>{queue.error.message}</Alert>}
       {chapters.length === 0 && !error && (
-        <p className="text-mute">No file chosen yet.</p>
+        <p className="rounded-md border border-dashed border-rule bg-card/60 px-5 py-8
+          text-center text-muted">
+          Choose a file and its chapters will be listed here for checking, with what the
+          conversion will cost, before anything is saved.
+        </p>
       )}
 
       {chapters.length > 0 && (

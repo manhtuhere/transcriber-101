@@ -27,7 +27,7 @@ describe('Dashboard', () => {
   test('renders an empty state when there are no books', async () => {
     api.listBooks.mockResolvedValue([])
     await renderWithProviders(<Dashboard />)
-    expect(await screen.findByText(/no books yet/i)).toBeInTheDocument()
+    expect(await screen.findByText(/your shelf is empty/i)).toBeInTheDocument()
   })
 
   test('renders one card per book', async () => {
@@ -146,6 +146,6 @@ describe('Favourites', () => {
     await userEvent.click(await screen.findByRole('button', { name: /^favourites/i }))
     await userEvent.type(screen.getByLabelText(/search/i), 'ulysses')
 
-    expect(await screen.findByText(/no books match/i)).toBeInTheDocument()
+    expect(await screen.findByText(/nothing here matches/i)).toBeInTheDocument()
   })
 })

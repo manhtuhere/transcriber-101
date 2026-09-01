@@ -22,17 +22,17 @@ export default function DangerZone({
   const [confirming, setConfirming] = useState(false)
 
   return (
-    <section className="mt-12 space-y-4 border-t border-vellum/10 pt-6">
+    <section className="space-y-4 border-t border-rule pt-6">
       {error && <Alert>{error.message}</Alert>}
 
       {confirming ? (
         <>
-          <p className="text-sm text-mute">
-            Delete <strong className="text-vellum">{title}</strong>, its chapters and its
-            audio? Re-creating it means paying for synthesis again.
+          <p className="text-sm text-muted">
+            Delete <strong className="font-medium text-ink">{title}</strong>, its chapters and
+            its audio? Re-creating it means paying for synthesis again.
           </p>
           <div className="flex gap-3">
-            <Button onClick={onDelete} disabled={deleting}>
+            <Button onClick={onDelete} disabled={deleting} className="bg-oxblood border-oxblood hover:bg-oxblood/85">
               {deleting ? 'Deleting…' : 'Delete permanently'}
             </Button>
             <Button variant="ghost" onClick={() => setConfirming(false)} disabled={deleting}>
@@ -41,7 +41,7 @@ export default function DangerZone({
           </div>
         </>
       ) : (
-        <Button variant="ghost" onClick={() => setConfirming(true)}>
+        <Button variant="bare" onClick={() => setConfirming(true)}>
           Delete this book
         </Button>
       )}

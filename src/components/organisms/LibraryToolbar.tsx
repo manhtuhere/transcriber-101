@@ -1,5 +1,4 @@
 import { INPUT_STYLE } from '../atoms/TextInput'
-
 import type { SortKey } from '../../utils/shelf'
 
 interface LibraryToolbarProps {
@@ -33,10 +32,9 @@ export default function LibraryToolbar({
   onFavoritesOnlyChange,
 }: LibraryToolbarProps) {
   return (
-    <div className="flex flex-wrap items-center gap-4 border-b border-vellum/10 pb-4">
-      <h2 className="text-2xl font-normal">
-        All books{' '}
-        <span className="ml-2 align-[0.4em] font-data text-xs text-mute">{count}</span>
+    <div className="flex flex-wrap items-center gap-3 border-b border-rule pb-4">
+      <h2 className="text-xl font-normal">
+        All books <span className="ml-1 font-data text-xs text-muted">{count}</span>
       </h2>
 
       {favoriteCount > 0 && (
@@ -44,19 +42,28 @@ export default function LibraryToolbar({
           type="button"
           aria-pressed={favoritesOnly}
           onClick={() => onFavoritesOnlyChange(!favoritesOnly)}
-          className={`mr-auto cursor-pointer rounded-full border px-3 py-1.5 text-sm
-            transition-colors ${
+          className={`mr-auto flex cursor-pointer items-center gap-1.5 rounded-full border
+            px-3 py-1.5 text-sm transition-colors ${
               favoritesOnly
-                ? 'border-amber/50 bg-amber/10 text-amber'
-                : 'border-vellum/10 text-mute hover:border-vellum/20 hover:text-vellum'
+                ? 'border-ochre bg-ochre/12 text-ink'
+                : 'border-rule bg-card text-muted hover:border-muted/50 hover:text-ink'
             }`}
         >
-          Favourites{' '}
-          <span className="ml-1 font-data text-xs">{favoriteCount}</span>
+          <svg viewBox="0 0 12 8" aria-hidden="true" className="w-2.5 fill-ochre">
+            <path d="M0 0h12L6 8z" />
+          </svg>
+          Favourites
+          <span className="font-data text-xs">{favoriteCount}</span>
         </button>
       )}
+      {favoriteCount === 0 && <div className="mr-auto" />}
 
-      <div className="flex w-full gap-2 sm:w-auto">
+      {/*
+        Stacked on a narrow screen. Side by side, the select holds its natural
+        width for "Recently added" and squeezes the search box down to a square;
+        a select will not shrink below its content however the flex basis is set.
+      */}
+      <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
         <label className="sr-only" htmlFor="library-search">
           Search your library
         </label>
@@ -66,7 +73,7 @@ export default function LibraryToolbar({
           placeholder="Search title or author"
           value={query}
           onChange={(event) => onQueryChange(event.target.value)}
-          className={`${INPUT_STYLE} ${COMPACT} flex-1 sm:w-60 sm:flex-none`}
+          className={`${INPUT_STYLE} ${COMPACT} w-full sm:w-56`}
         />
 
         <label className="sr-only" htmlFor="library-sort">
@@ -76,7 +83,7 @@ export default function LibraryToolbar({
           id="library-sort"
           value={sort}
           onChange={(event) => onSortChange(event.target.value as SortKey)}
-          className={`${INPUT_STYLE} ${COMPACT} w-auto`}
+          className={`${INPUT_STYLE} ${COMPACT} w-full sm:w-auto`}
         >
           {SORTS.map((option) => (
             <option key={option.id} value={option.id}>

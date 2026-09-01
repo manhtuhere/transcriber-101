@@ -9,29 +9,28 @@ interface ChapterStatusRowProps {
   retrying: boolean
 }
 
-export default function ChapterStatusRow({
-  chapter,
-  onRetry,
-  retrying,
-}: ChapterStatusRowProps) {
+export default function ChapterStatusRow({ chapter, onRetry, retrying }: ChapterStatusRowProps) {
   return (
-    <tr className="border-b border-vellum/10 hover:bg-surface">
-      <td className="px-3 py-2 font-data text-xs text-mute">{chapter.idx + 1}</td>
-      <td className="px-3 py-2">{chapter.title}</td>
-      <td className="px-3 py-2">
+    <tr className="border-b border-rule last:border-0 hover:bg-linen/40">
+      <td className="py-3 pr-3 pl-4 font-data text-xs text-muted">
+        {String(chapter.idx + 1).padStart(2, '0')}
+      </td>
+      <td className="font-title py-3 pr-3">{chapter.title}</td>
+      <td className="py-3 pr-3">
         <StatusBadge status={chapter.status} />
       </td>
-      <td className="px-3 py-2 font-data text-xs text-mute">
+      <td className="py-3 pr-3 font-data text-xs text-muted">
         {chapter.duration_sec !== null ? formatDuration(chapter.duration_sec) : '—'}
       </td>
-      <td className="px-3 py-2 font-data text-xs text-rose">{chapter.error}</td>
-      <td className="px-3 py-2 text-right">
+      <td className="py-3 pr-3 font-data text-xs text-oxblood">{chapter.error}</td>
+      <td className="py-3 pr-4 text-right">
         {chapter.status === 'failed' && (
           <Button
             variant="ghost"
             disabled={retrying}
             onClick={() => onRetry(chapter.id)}
             aria-label={`Retry chapter ${chapter.idx + 1}`}
+            className="px-3 py-1.5"
           >
             Retry
           </Button>

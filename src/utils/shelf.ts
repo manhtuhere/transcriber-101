@@ -41,3 +41,26 @@ export function sortBooks(books: BookSummary[], sort: SortKey): BookSummary[] {
     return b.created_at.localeCompare(a.created_at)
   })
 }
+
+export interface ShelfStats {
+  total: number
+  ready: number
+  processing: number
+  totalSeconds: number
+}
+
+/**
+ * What the shelf adds up to.
+ *
+ * The library header would otherwise be a title over a lot of nothing, and
+ * these are the facts a listener actually wants at a glance: how much is here,
+ * and how much of it can be played yet.
+ */
+export function shelfStats(books: BookSummary[]): ShelfStats {
+  return {
+    total: books.length,
+    ready: books.filter((book) => book.status === 'ready').length,
+    processing: books.filter((book) => book.status === 'processing').length,
+    totalSeconds: books.reduce((sum, book) => sum + (book.total_duration_sec ?? 0), 0),
+  }
+}

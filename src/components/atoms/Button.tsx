@@ -6,21 +6,21 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const BASE =
-  'text-sm font-medium tracking-wide transition-colors cursor-pointer ' +
+  'text-sm font-medium transition-colors cursor-pointer ' +
   'disabled:cursor-not-allowed disabled:opacity-40'
 
 /*
   Padding belongs to the variant, not to BASE. Tailwind resolves conflicting
   utilities by stylesheet order, not by the order they appear in a className
   string, so a caller passing `px-0` cannot reliably beat a `px-6` in BASE —
-  the header's quiet action is a variant instead of an override.
+  a quiet action is a variant instead of an override.
 */
 const VARIANTS = {
-  primary: 'rounded-full border border-transparent px-6 py-3 bg-amber text-ink hover:bg-amber/85',
+  primary: 'rounded-md border border-cloth px-5 py-2.5 bg-cloth text-card hover:bg-cloth-soft',
   ghost:
-    'rounded-full border border-vellum/10 px-6 py-3 bg-transparent text-mute ' +
-    'hover:border-vellum/20 hover:text-vellum',
-  bare: 'bg-transparent px-0 py-1 tracking-[0.09em] text-mute uppercase hover:text-vellum',
+    'rounded-md border border-rule px-5 py-2.5 bg-card text-ink ' +
+    'hover:border-muted/50 hover:bg-linen/60',
+  bare: 'bg-transparent px-0 py-1 font-normal text-muted hover:text-ink',
 }
 
 export default function Button({

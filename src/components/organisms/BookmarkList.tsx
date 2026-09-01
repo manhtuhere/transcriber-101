@@ -23,25 +23,31 @@ export default function BookmarkList({
   if (bookmarks.length === 0) return null
 
   return (
-    <section aria-labelledby="bookmarks-heading" className="mt-12">
-      <h2 id="bookmarks-heading" className="font-data text-xs tracking-[0.14em] text-amber uppercase">
-        Bookmarks
+    <section aria-labelledby="bookmarks-heading" className="space-y-3">
+      <h2
+        id="bookmarks-heading"
+        className="font-data text-[0.68rem] tracking-[0.14em] text-muted uppercase"
+      >
+        Saved spots
       </h2>
 
-      <ul className="mt-4 list-none border-t border-vellum/10 p-0">
+      <ul className="list-none overflow-hidden rounded-md border border-rule bg-card p-0">
         {bookmarks.map((bookmark) => (
-          <li key={bookmark.id} className="flex items-center gap-4 border-b border-vellum/10">
+          <li
+            key={bookmark.id}
+            className="flex items-center gap-3 border-b border-rule last:border-0
+              hover:bg-linen/40"
+          >
             <button
               type="button"
               onClick={() => onSeek(Number(bookmark.position_sec))}
               aria-label={`Play from ${formatDuration(Number(bookmark.position_sec))}`}
-              className="flex flex-1 items-baseline gap-4 py-3 text-left text-mute
-                transition-colors hover:text-vellum"
+              className="flex flex-1 items-baseline gap-4 px-4 py-3 text-left transition-colors"
             >
-              <span className="font-data text-xs text-amber">
+              <span className="font-data text-xs text-ochre">
                 {formatDuration(Number(bookmark.position_sec))}
               </span>
-              <span>{bookmark.note ?? 'Saved spot'}</span>
+              <span className="text-sm text-ink/85">{bookmark.note ?? 'Saved spot'}</span>
             </button>
 
             <button
@@ -49,8 +55,8 @@ export default function BookmarkList({
               onClick={() => onDelete(bookmark.id)}
               disabled={deleting}
               aria-label={`Remove bookmark at ${formatDuration(Number(bookmark.position_sec))}`}
-              className="cursor-pointer px-2 py-3 text-sm text-mute transition-colors
-                hover:text-rose disabled:opacity-40"
+              className="cursor-pointer px-4 py-3 text-sm text-muted transition-colors
+                hover:text-oxblood disabled:opacity-40"
             >
               Remove
             </button>

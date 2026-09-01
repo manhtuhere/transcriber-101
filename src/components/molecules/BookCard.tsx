@@ -18,10 +18,9 @@ export default function BookCard({ book, position, onToggleFavorite }: BookCardP
   const total = book.total_duration_sec ?? 0
   const percent = ready ? percentComplete(position, total) : 0
   const started = percent > 0
+  const favorite = book.favorited_at !== null
 
   const action = started ? 'Continue listening' : 'Start listening'
-
-  const favorite = book.favorited_at !== null
 
   return (
     <article className="relative">
@@ -34,26 +33,37 @@ export default function BookCard({ book, position, onToggleFavorite }: BookCardP
         to={ready ? '/books/$id/listen' : '/books/$id'}
         params={{ id: book.id }}
         aria-label={ready ? `${action}: ${book.title}` : `View progress: ${book.title}`}
-        className="group block rounded-md text-inherit no-underline"
+        className="group block rounded-sm text-inherit no-underline"
       >
-        <BookCover title={book.title} chapterCount={chapterCount} percent={percent} size="sm" />
+        <BookCover
+          title={book.title}
+          author={book.author}
+          chapterCount={chapterCount}
+          durationSec={total}
+          percent={percent}
+          size="sm"
+        />
 
+        <h2 className="font-title mt-3 text-[0.95rem] leading-snug">{book.title}</h2>
+        <p className="mt-0.5 text-sm text-muted">{book.author}</p>
 
-        <h2 className="mt-3 text-base leading-tight font-medium">{book.title}</h2>
-        <p className="mt-1 text-sm text-mute">{book.author}</p>
-
-        <p className="mt-1 flex gap-3 font-data text-xs text-mute">
-          <span>{chapterCount} chapters</span>
-          {book.total_duration_sec !== null && (
-            <span>{formatLength(book.total_duration_sec)}</span>
-          )}
+        {/*
+          Repeated from the cover deliberately. The cover is aria-hidden — it is
+          a picture of a book — so without this line the chapter count and
+          running time would exist only as pixels.
+        */}
+        <p className="mt-1 font-data text-[0.68rem] text-muted">
+          {chapterCount} chapters
+          {total > 0 && <> · {formatLength(total)}</>}
         </p>
 
         {ready ? (
-          <p className="mt-2 flex flex-col gap-1 text-sm text-amber transition-colors group-hover:text-amber/80">
-            {action}
+          <p className="mt-2 flex flex-col gap-0.5">
+            <span className="text-sm font-medium text-cloth group-hover:text-cloth-soft">
+              {action}
+            </span>
             {started && (
-              <span className="font-data text-xs text-mute">
+              <span className="font-data text-[0.68rem] text-ochre">
                 {formatRemaining(total - position)}
               </span>
             )}

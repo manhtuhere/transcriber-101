@@ -7,7 +7,8 @@ export default function Spinner({ label = 'Loading…' }: SpinnerProps) {
     <p
       role="status"
       aria-live="polite"
-      className="mx-auto max-w-measure px-gutter py-18 text-sm tracking-[0.09em] text-mute uppercase"
+      className="mx-auto max-w-measure px-gutter py-18 font-data text-sm
+        tracking-[0.08em] text-muted"
     >
       {label}
     </p>
