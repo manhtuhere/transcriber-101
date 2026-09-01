@@ -31,7 +31,7 @@ export default function DevSignInPanel({
         type="button"
         onClick={onSignIn}
         disabled={pending}
-        className="cursor-pointer rounded-md border border-rule bg-card px-4 py-2 text-sm
+        className="cursor-pointer rounded-md border border-edge bg-card px-4 py-2 text-sm
           font-medium text-ink transition-colors hover:bg-linen/70
           disabled:cursor-not-allowed disabled:opacity-40"
       >

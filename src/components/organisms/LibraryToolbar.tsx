@@ -46,7 +46,7 @@ export default function LibraryToolbar({
             px-3 py-1.5 text-sm transition-colors ${
               favoritesOnly
                 ? 'border-ochre bg-ochre/12 text-ink'
-                : 'border-rule bg-card text-muted hover:border-muted/50 hover:text-ink'
+                : 'border-edge bg-card text-muted hover:border-ink/40 hover:text-ink'
             }`}
         >
           <svg viewBox="0 0 12 8" aria-hidden="true" className="w-2.5 fill-ochre">

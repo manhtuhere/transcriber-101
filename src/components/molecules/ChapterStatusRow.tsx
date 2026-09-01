@@ -7,9 +7,16 @@ interface ChapterStatusRowProps {
   chapter: Chapter
   onRetry: (chapterId: string) => void
   retrying: boolean
+  /** The table drops the error column entirely when nothing has failed. */
+  showError?: boolean
 }
 
-export default function ChapterStatusRow({ chapter, onRetry, retrying }: ChapterStatusRowProps) {
+export default function ChapterStatusRow({
+  chapter,
+  onRetry,
+  retrying,
+  showError = true,
+}: ChapterStatusRowProps) {
   return (
     <tr className="border-b border-rule last:border-0 hover:bg-linen/40">
       <td className="py-3 pr-3 pl-4 font-data text-xs text-muted">
@@ -22,7 +29,9 @@ export default function ChapterStatusRow({ chapter, onRetry, retrying }: Chapter
       <td className="py-3 pr-3 font-data text-xs text-muted">
         {chapter.duration_sec !== null ? formatDuration(chapter.duration_sec) : '—'}
       </td>
-      <td className="py-3 pr-3 font-data text-xs text-oxblood">{chapter.error}</td>
+      {showError && (
+        <td className="py-3 pr-3 font-data text-xs text-oxblood">{chapter.error}</td>
+      )}
       <td className="py-3 pr-4 text-right">
         {chapter.status === 'failed' && (
           <Button

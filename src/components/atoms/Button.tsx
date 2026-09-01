@@ -18,8 +18,8 @@ const BASE =
 const VARIANTS = {
   primary: 'rounded-md border border-cloth px-5 py-2.5 bg-cloth text-card hover:bg-cloth-soft',
   ghost:
-    'rounded-md border border-rule px-5 py-2.5 bg-card text-ink ' +
-    'hover:border-muted/50 hover:bg-linen/60',
+    'rounded-md border border-edge px-5 py-2.5 bg-card text-ink ' +
+    'hover:border-ink/40 hover:bg-linen/60',
   bare: 'bg-transparent px-0 py-1 font-normal text-muted hover:text-ink',
 }
 

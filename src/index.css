@@ -16,7 +16,13 @@
   --color-paper: #f1ece2;
   --color-card: #fcfaf7;
   --color-linen: #e5ddce;
+  /* A hairline between rows: decorative structure, deliberately faint. */
   --color-rule: #dcd4c6;
+  /*
+    The boundary of a control. WCAG 1.4.11 asks 3:1 for anything that tells you
+    where a field begins, which --color-rule is far too pale to do.
+  */
+  --color-edge: #95866d;
 
   --color-ink: #221f1a;
   --color-muted: #6e6558;
@@ -25,8 +31,12 @@
   --color-cloth: #2e5240;
   --color-cloth-soft: #4a7059;
 
-  /* The one warm colour, kept for audio that is playing or part-heard. */
-  --color-ochre: #c0721c;
+  /*
+    The one warm colour, kept for audio that is playing or part-heard. Dark
+    enough to carry small text on paper: the brighter orange this started as
+    managed only 3.5:1, and it is used at 11px on the shelf.
+  */
+  --color-ochre: #9c5a13;
   --color-oxblood: #8a3324;
 
   /* Literata was drawn for reading books on a screen. */

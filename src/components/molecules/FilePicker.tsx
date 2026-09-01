@@ -19,7 +19,7 @@ export default function FilePicker({ id = 'file', label, onSelect }: FilePickerP
           if (file) onSelect(file)
         }}
         className="text-sm text-muted file:mr-4 file:cursor-pointer file:rounded-md
-          file:border file:border-rule file:bg-card file:px-4 file:py-2
+          file:border file:border-edge file:bg-card file:px-4 file:py-2
           file:text-sm file:font-medium file:text-ink hover:file:bg-linen/60"
       />
     </FormField>

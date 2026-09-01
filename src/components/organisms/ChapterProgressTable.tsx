@@ -18,19 +18,29 @@ export default function ChapterProgressTable({
   const ready = chapters.filter((chapter) => chapter.status === 'ready').length
   const percent = chapters.length > 0 ? Math.round((ready / chapters.length) * 100) : 0
 
+  // Ochre means work in progress. A finished book keeps the count but loses the
+  // bar: a full-width bar for something already done is the loudest thing on
+  // the page and says nothing the sentence beside it does not.
+  const working = ready < chapters.length
+
+  // An Error column holds width on every row for a case that is usually empty.
+  const anyErrors = chapters.some((chapter) => chapter.error)
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
         <p className="font-data text-sm text-muted">
           {ready} of {chapters.length} chapters ready
         </p>
-        <div className="h-1.5 min-w-40 flex-1 overflow-hidden rounded-full bg-linen">
-          <span
-            className="block h-full rounded-full bg-ochre transition-[width] duration-500
-              motion-reduce:transition-none"
-            style={{ width: `${percent}%` }}
-          />
-        </div>
+        {working && (
+          <div className="h-1.5 min-w-40 flex-1 overflow-hidden rounded-full bg-linen">
+            <span
+              className="block h-full rounded-full bg-ochre transition-[width] duration-500
+                motion-reduce:transition-none"
+              style={{ width: `${percent}%` }}
+            />
+          </div>
+        )}
       </div>
 
       <div className="overflow-hidden rounded-md border border-rule bg-card">
@@ -41,7 +51,11 @@ export default function ChapterProgressTable({
               <th scope="col" className={TH}>Chapter</th>
               <th scope="col" className={TH}>Status</th>
               <th scope="col" className={TH}>Duration</th>
-              <th scope="col" className={TH}>Error</th>
+              {anyErrors && (
+                <th scope="col" className={TH}>
+                  Error
+                </th>
+              )}
               <th scope="col" className={`${TH} pr-4`} />
             </tr>
           </thead>
@@ -52,6 +66,7 @@ export default function ChapterProgressTable({
                 chapter={chapter}
                 onRetry={onRetry}
                 retrying={retrying}
+                showError={anyErrors}
               />
             ))}
           </tbody>

@@ -81,6 +81,14 @@ appear as text in the caption beside it, or it exists only as pixels. It deliber
 *less* at shelf size for that reason: duplicating the author and duration put them in the page
 twice.
 
+Two contrast rules the palette depends on, both measured rather than eyeballed:
+
+- **Ochre is `#9c5a13`, not a brighter orange.** It is used at 11px on the shelf, and the
+  brighter tone this started as managed 3.5:1 against paper — below AA for normal text.
+- **Controls use `--color-edge`, not `--color-rule`.** WCAG 1.4.11 wants 3:1 on anything that
+  tells you where a field begins. `--color-rule` is a decorative hairline at 1.4:1 and is right
+  for dividers between rows, wrong for the border of an input.
+
 - **Spacing is set by the container, not by the child.** `PageShell` owns the page rhythm with
   `space-y-6`; a section carries no top margin of its own. A component that has to remember its
   own margin is how a button ends up touching the paragraph above it.
