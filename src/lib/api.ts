@@ -1,4 +1,5 @@
 import type { Session } from '@supabase/supabase-js'
+import { AUDIO_URL_TTL_SEC } from '../constants/playback'
 import type { Bookmark, BookSummary, BookWithChapters } from '../types/book'
 import type { Manifest } from '../types/manifest'
 import type { BookDraft } from '../utils/buildInsert'
@@ -20,9 +21,22 @@ export async function signInWithOtp(email: string): Promise<void> {
  * Password sign-in. Used only by the dev shortcut on the sign-in page — the
  * product itself authenticates with a magic link.
  */
-export async function signInWithPassword(email: string, password: string): Promise<void> {
-  const { error } = await supabase.auth.signInWithPassword({ email, password })
+export async function signInWithPassword(
+  email: string,
+  password: string,
+): Promise<Session | null> {
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password })
   if (error) throw error
+  return data.session
+}
+
+/**
+ * Run `onChange` whenever the session changes — sign-in, sign-out, a token
+ * refresh, or the same thing happening in another tab.
+ */
+export function onAuthStateChange(onChange: () => void): () => void {
+  const { data } = supabase.auth.onAuthStateChange(() => onChange())
+  return () => data.subscription.unsubscribe()
 }
 
 export async function getSession(): Promise<Session | null> {
@@ -90,18 +104,29 @@ export async function setFavorite(bookId: string, favorite: boolean): Promise<vo
 }
 
 export async function getBook(id: string): Promise<BookWithChapters> {
+  /*
+    maybeSingle, not single: a book that is missing — or that belongs to
+    someone else, which RLS makes indistinguishable — is an ordinary outcome,
+    not an exception. `single()` reports it as "Cannot coerce the result to a
+    single JSON object", which is a sentence about PostgREST rather than
+    anything the reader can act on.
+  */
   const { data, error } = await supabase
     .from('books')
     .select('*, chapters(*)')
     .eq('id', id)
     .order('idx', { referencedTable: 'chapters' })
-    .single()
+    .maybeSingle()
   if (error) throw error
+  if (!data) throw new Error('That book does not exist, or it is not yours.')
   return data as BookWithChapters
 }
 
 /** Signed URL for a private bucket object, valid for the listening session. */
-export async function signAudioUrl(path: string, expiresInSec = 60 * 60 * 4): Promise<string> {
+export async function signAudioUrl(
+  path: string,
+  expiresInSec: number = AUDIO_URL_TTL_SEC,
+): Promise<string> {
   const { data, error } = await supabase.storage
     .from('audio')
     .createSignedUrl(path, expiresInSec)
@@ -116,7 +141,9 @@ export async function signAudioUrl(path: string, expiresInSec = 60 * 60 * 4): Pr
  */
 export async function getManifest(bookId: string): Promise<Manifest> {
   const { data, error } = await supabase.storage.from('audio').download(`${bookId}/manifest.json`)
-  if (error) throw error
+  // A storage 404 arrives as "Object not found", which says nothing about what
+  // the reader should do.
+  if (error) throw new Error('That book is not ready to play yet, or it is not yours.')
   return JSON.parse(await data.text()) as Manifest
 }
 

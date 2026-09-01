@@ -10,3 +10,9 @@ export const POSITION_KEY_PREFIX = 'pos:'
   the book. Someone who listens at 1.5x does so for everything.
 */
 export const SPEED_KEY = 'speed'
+
+/**
+ * How long a signed audio URL stays valid. Long enough to hear a book out in
+ * one sitting without the player having to re-sign anything mid-listen.
+ */
+export const AUDIO_URL_TTL_SEC = 60 * 60 * 4

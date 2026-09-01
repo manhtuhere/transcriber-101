@@ -5,7 +5,12 @@ import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { renderWithProviders } from '../test/renderWithProviders'
 import ProtectedRoute from './ProtectedRoute'
 
-vi.mock('../lib/api', () => ({ getSession: vi.fn(), signOut: vi.fn() }))
+vi.mock('../lib/api', () => ({
+  getSession: vi.fn(),
+  signOut: vi.fn(),
+  // useSession subscribes so the guard cannot serve a stale session.
+  onAuthStateChange: vi.fn(() => () => {}),
+}))
 const api = vi.mocked(await import('../lib/api'))
 
 // The component only checks that a session exists, so a stub stands in for the

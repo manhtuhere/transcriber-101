@@ -150,6 +150,23 @@ no attribute, `isContentEditable` is `undefined`, and the element cannot take fo
 therefore also matches on the attribute via `closest()`, and the test dispatches the event on
 the element rather than trying to focus it.
 
+## Two caching rules the player depends on
+
+Both were found by testing in a real browser; neither shows up in jsdom.
+
+1. **The session query must be seeded on sign-in, not invalidated.** Being bounced to the
+   sign-in page caches `session: null`. `invalidateQueries` does not refetch a query nothing is
+   observing, and the guard is unmounted while sign-in is showing — so it would mount, read the
+   stale null, and bounce straight back. `useDevSignIn` writes the session it just received
+   with `setQueryData`. `useSession` also subscribes to `onAuthStateChange`, which is what makes
+   signing out redirect immediately and covers other tabs.
+
+2. **A signed audio URL must not be refetched under a playing element.** Signing the same
+   object twice yields two different URLs, and changing `src` reloads the audio from zero.
+   Under the app's 30-second default stale time, returning to a chapter played more than half a
+   minute earlier silently threw away the listener's place. `useAudioUrl` holds the URL for
+   most of its own lifetime instead.
+
 ## Bookmarks (positions)
 
 `bookmarks` stores a spot in **book** seconds, not chapter seconds, matching the chapter-marker
