@@ -15,3 +15,13 @@ export const MAX_TITLE_LENGTH = 80
 // enough for a ~300-page novel and small enough to make a runaway upload
 // obvious before it is queued.
 export const MAX_BOOK_CHARS = 500_000
+
+/*
+  Cover limits. These match the bucket's own limits, which are the real
+  enforcement — a request that skips the UI is refused by Storage. Checking
+  here as well means the reader is told what is wrong before a slow upload
+  starts, rather than after it fails.
+*/
+export const MAX_COVER_BYTES = 3 * 1024 * 1024
+export const ACCEPTED_COVER_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+export const ACCEPTED_COVER_ACCEPT = 'image/jpeg,image/png,image/webp'

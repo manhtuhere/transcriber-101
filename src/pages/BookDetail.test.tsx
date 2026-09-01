@@ -10,6 +10,10 @@ vi.mock('../lib/api', () => ({
   retryChapter: vi.fn(),
   subscribeToChapters: vi.fn(() => () => {}),
   deleteBook: vi.fn(),
+  updateBook: vi.fn(),
+  uploadCover: vi.fn(),
+  removeCover: vi.fn(),
+  signCoverUrl: vi.fn(),
 }))
 const api = vi.mocked(await import('../lib/api'))
 
@@ -184,5 +188,83 @@ describe('Deleting a book', () => {
     await userEvent.click(screen.getByRole('button', { name: /delete permanently/i }))
 
     expect(await screen.findByText(/storage unreachable/i)).toBeInTheDocument()
+  })
+})
+
+describe('Editing a book', () => {
+  const openEditor = async () =>
+    userEvent.click(await screen.findByRole('button', { name: /edit title, author and cover/i }))
+
+  test('is a mode, so the page reads as a page until asked', async () => {
+    api.getBook.mockResolvedValue(book([chapter(0)]))
+    await render()
+
+    expect(await screen.findByRole('heading', { name: 'Moby Dick' })).toBeInTheDocument()
+    expect(screen.queryByLabelText('Title')).not.toBeInTheDocument()
+  })
+
+  test('opens seeded with what the book already says', async () => {
+    api.getBook.mockResolvedValue(book([chapter(0)]))
+    await render()
+    await openEditor()
+
+    expect(screen.getByLabelText('Title')).toHaveValue('Moby Dick')
+    expect(screen.getByLabelText('Author')).toHaveValue('H. M.')
+  })
+
+  test('saves the corrected title and author', async () => {
+    api.getBook.mockResolvedValue(book([chapter(0)]))
+    api.updateBook.mockResolvedValue(undefined)
+    await render()
+    await openEditor()
+
+    await userEvent.clear(screen.getByLabelText('Title'))
+    await userEvent.type(screen.getByLabelText('Title'), 'Moby-Dick')
+    await userEvent.clear(screen.getByLabelText('Author'))
+    await userEvent.type(screen.getByLabelText('Author'), 'Herman Melville')
+    await userEvent.click(screen.getByRole('button', { name: /save details/i }))
+
+    await waitFor(() =>
+      expect(api.updateBook).toHaveBeenCalledWith('b1', {
+        title: 'Moby-Dick',
+        author: 'Herman Melville',
+      }),
+    )
+  })
+
+  test('cancelling saves nothing and restores what was there', async () => {
+    api.getBook.mockResolvedValue(book([chapter(0)]))
+    await render()
+    await openEditor()
+
+    await userEvent.clear(screen.getByLabelText('Title'))
+    await userEvent.type(screen.getByLabelText('Title'), 'Something else')
+    await userEvent.click(screen.getByRole('button', { name: /cancel/i }))
+
+    expect(api.updateBook).not.toHaveBeenCalled()
+    await openEditor()
+    expect(screen.getByLabelText('Title')).toHaveValue('Moby Dick')
+  })
+
+  // A title is what the shelf is read by; an empty one would leave a nameless card.
+  test('refuses to save an empty title', async () => {
+    api.getBook.mockResolvedValue(book([chapter(0)]))
+    await render()
+    await openEditor()
+
+    await userEvent.clear(screen.getByLabelText('Title'))
+    expect(screen.getByRole('button', { name: /save details/i })).toBeDisabled()
+  })
+
+  test('uploads a chosen cover against this book', async () => {
+    api.getBook.mockResolvedValue(book([chapter(0)]))
+    api.uploadCover.mockResolvedValue(undefined)
+    await render()
+    await openEditor()
+
+    const cover = new File([new Uint8Array(10)], 'cover.jpg', { type: 'image/jpeg' })
+    await userEvent.upload(screen.getByLabelText(/cover/i), cover, { applyAccept: false })
+
+    await waitFor(() => expect(api.uploadCover).toHaveBeenCalledWith('b1', cover))
   })
 })

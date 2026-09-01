@@ -6,6 +6,8 @@ interface BookGridProps {
   books: BookSummary[]
   /** Saved position per book id, in seconds. */
   positions: Record<string, number>
+  /** Signed cover URLs, keyed by storage path. */
+  covers: Record<string, string>
   /** True when books exist but the search or filter hid them all. */
   filtered?: boolean
   onToggleFavorite: (bookId: string, favorite: boolean) => void
@@ -14,6 +16,7 @@ interface BookGridProps {
 export default function BookGrid({
   books,
   positions,
+  covers,
   filtered = false,
   onToggleFavorite,
 }: BookGridProps) {
@@ -53,6 +56,7 @@ export default function BookGrid({
           key={book.id}
           book={book}
           position={positions[book.id] ?? 0}
+          coverUrl={book.cover_path ? covers[book.cover_path] : undefined}
           onToggleFavorite={onToggleFavorite}
         />
       ))}

@@ -12,7 +12,9 @@ import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
 import { useMediaSession } from "../hooks/useMediaSession";
 import { useSleepTimer } from "../hooks/useSleepTimer";
 import { useAudioUrl } from "../hooks/useAudioUrl";
+import { useBook } from "../hooks/useBook";
 import { useBookmarks } from "../hooks/useBookmarks";
+import { useCoverUrl } from "../hooks/useCoverUrl";
 import { useDeleteBookmark } from "../hooks/useDeleteBookmark";
 import { useManifest } from "../hooks/useManifest";
 import {
@@ -56,6 +58,11 @@ export default function Listen() {
 
   const manifestQuery = useManifest(id);
   const manifest = manifestQuery.data;
+
+  // The cover comes from the book row rather than the manifest: a manifest is
+  // written once by the worker, and a cover can be changed at any time after.
+  const book = useBook(id);
+  const cover = useCoverUrl(book.data?.cover_path ?? null);
 
   // Until the listener picks a chapter, the active one is wherever the saved
   // position lands — derived, not stored, so the two can never disagree.
@@ -223,6 +230,7 @@ export default function Listen() {
         {/* Hidden on narrow screens, where the transport needs the full width. */}
         <div className="hidden shrink-0 sm:block">
           <BookCover
+            coverUrl={cover.data}
             title={manifest.title}
             author={manifest.author}
             chapterCount={manifest.chapters.length}

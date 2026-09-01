@@ -7,6 +7,7 @@ import LibraryToolbar from '../components/organisms/LibraryToolbar'
 import ShelfSummary from '../components/organisms/ShelfSummary'
 import PageShell from '../components/templates/PageShell'
 import { useBooks } from '../hooks/useBooks'
+import { useCoverUrls } from '../hooks/useCoverUrls'
 import { useToggleFavorite } from '../hooks/useToggleFavorite'
 import { percentComplete } from '../utils/format'
 import { readSavedPosition } from '../utils/playback'
@@ -39,6 +40,10 @@ export default function Dashboard() {
     return percent >= IN_PROGRESS_MIN && percent <= IN_PROGRESS_MAX
   })
 
+  const covers = useCoverUrls(
+    books.map((book) => book.cover_path).filter((path): path is string => path !== null),
+  )
+
   const stats = shelfStats(books)
   const favoriteCount = books.filter(isFavorite).length
   const visible = useMemo(
@@ -54,7 +59,11 @@ export default function Dashboard() {
       {favorite.error && <Alert>{favorite.error.message}</Alert>}
 
       {resumable && (
-        <ContinueListening book={resumable} position={positions[resumable.id] ?? 0} />
+        <ContinueListening
+          book={resumable}
+          position={positions[resumable.id] ?? 0}
+          coverUrl={resumable.cover_path ? covers.data?.[resumable.cover_path] : undefined}
+        />
       )}
 
       {books.length > 0 && (
@@ -73,6 +82,7 @@ export default function Dashboard() {
       <BookGrid
         books={visible}
         positions={positions}
+        covers={covers.data ?? {}}
         filtered={query.trim() !== '' || favoritesOnly}
         onToggleFavorite={(bookId, next) => favorite.mutate({ bookId, favorite: next })}
       />

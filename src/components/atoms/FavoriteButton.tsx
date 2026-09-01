@@ -21,11 +21,23 @@ export default function FavoriteButton({ title, favorite, onToggle }: FavoriteBu
       className={`absolute top-0 right-3 z-10 h-8 w-[18px] cursor-pointer
         drop-shadow-[0_1px_2px_rgb(34_31_26_/_0.35)] transition-[height,filter]
         hover:h-9 motion-reduce:transition-none
-        ${favorite ? 'text-ochre' : 'text-ink/25 hover:text-ink/45'}`}
+        ${favorite ? 'text-ochre' : 'text-card hover:text-linen'}`}
     >
-      {/* A ribbon marker tucked into the head of the book. */}
+      {/*
+        A ribbon marker tucked into the head of the book.
+
+        Filled and outlined rather than tinted: the ribbon sits over an
+        uploaded cover, which can be any colour at all. A wash of ink at 25%
+        read fine against the generated binding and disappeared completely on
+        a dark photograph.
+      */}
       <svg viewBox="0 0 18 32" aria-hidden="true" className="h-full w-full fill-current">
-        <path d="M0 0h18v32l-9-7-9 7z" />
+        <path
+          d="M0 0h18v32l-9-7-9 7z"
+          stroke="rgb(34 31 26 / 0.55)"
+          strokeWidth="1.5"
+          vectorEffect="non-scaling-stroke"
+        />
       </svg>
     </button>
   )

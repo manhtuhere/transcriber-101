@@ -132,6 +132,30 @@ await renderWithProviders(<Listen />, { route: '/books/b1/listen', path: '/books
   enums, so the generator widens them to `string`; `api.ts` is the single place rows are cast
   to the narrowed types on the way in.
 
+## Covers
+
+A cover is optional. Without one, `BookCover` prints a banded binding from the book's own
+title, so the shelf is never a grid of blank rectangles.
+
+`books.cover_path` names an object in the private `covers` bucket, keyed by book id. The
+upload form therefore uploads **after** `createBook` returns — there is no id to key the path
+on until then — and a failed cover does not block the book, which is already queued by that
+point.
+
+Two query keys, not one: `keys.cover(path)` caches a single signed URL as a string, and
+`keys.coverBatch(paths)` caches the shelf's whole map as a Record so a shelf of thirty books
+signs in one round trip. They must stay in **separate namespaces**. Joining a single path
+yields exactly that path, so a shared `'cover'` prefix made the two keys identical on a
+one-book shelf: the detail page read the Record and rendered `src="[object Object]"`.
+`src/hooks/keys.test.ts` pins this.
+
+Deleting a book clears the covers folder before the row, for the same reason the audio is
+cleared first — Storage has no foreign key.
+
+`FavoriteButton` is filled and outlined rather than tinted. A cover can be any colour at all;
+the previous ink-at-25% ribbon read fine on the generated binding and vanished on a dark
+photograph.
+
 ## Bookmarks
 
 `books.favorited_at` is a nullable timestamp, not a boolean: null means "not bookmarked", and a

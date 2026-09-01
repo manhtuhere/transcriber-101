@@ -1,5 +1,6 @@
 import type { Session } from '@supabase/supabase-js'
 import { AUDIO_URL_TTL_SEC } from '../constants/playback'
+import { coverPath } from '../utils/cover-file'
 import type { Bookmark, BookSummary, BookWithChapters } from '../types/book'
 import type { Manifest } from '../types/manifest'
 import type { BookDraft } from '../utils/buildInsert'
@@ -205,6 +206,82 @@ export async function deleteBookmark(id: string): Promise<void> {
   if (error) throw error
 }
 
+export const COVER_BUCKET = 'covers'
+
+/**
+ * Store a cover for a book and record where it went.
+ *
+ * upsert, because one book has one cover: replacing it overwrites rather than
+ * leaving the old file behind. The path is written to the row only once the
+ * object is safely stored, so a failed upload cannot leave the row pointing at
+ * an image that is not there.
+ */
+export async function uploadCover(bookId: string, file: File): Promise<void> {
+  const path = coverPath(bookId, file)
+
+  const { error: uploadError } = await supabase.storage
+    .from(COVER_BUCKET)
+    .upload(path, file, { contentType: file.type, upsert: true })
+  if (uploadError) throw uploadError
+
+  const { error } = await supabase.from('books').update({ cover_path: path }).eq('id', bookId)
+  if (error) throw error
+}
+
+/** Drop a book's cover, so it falls back to its printed binding. */
+export async function removeCover(bookId: string, path: string): Promise<void> {
+  const { error: removeError } = await supabase.storage.from(COVER_BUCKET).remove([path])
+  if (removeError) throw removeError
+
+  const { error } = await supabase.from('books').update({ cover_path: null }).eq('id', bookId)
+  if (error) throw error
+}
+
+/** A signed URL for a cover. The bucket is private, so this expires. */
+export async function signCoverUrl(path: string): Promise<string> {
+  const { data, error } = await supabase.storage
+    .from(COVER_BUCKET)
+    .createSignedUrl(path, AUDIO_URL_TTL_SEC)
+  if (error) throw error
+  return data.signedUrl
+}
+
+/**
+ * Sign every cover on the shelf in one round trip.
+ *
+ * createSignedUrls rather than one call per book: a shelf of thirty books would
+ * otherwise open thirty requests just to draw itself.
+ */
+export async function signCoverUrls(paths: string[]): Promise<Record<string, string>> {
+  if (paths.length === 0) return {}
+
+  const { data, error } = await supabase.storage
+    .from(COVER_BUCKET)
+    .createSignedUrls(paths, AUDIO_URL_TTL_SEC)
+  if (error) throw error
+
+  // An entry can come back with an error — a cover deleted from Storage while
+  // the row still names it. Leaving it out just falls the book back to its
+  // printed binding, which is a better outcome than failing the whole shelf.
+  const signed: Record<string, string> = {}
+  for (const entry of data) {
+    if (entry.path && entry.signedUrl) signed[entry.path] = entry.signedUrl
+  }
+  return signed
+}
+
+/** Change what a book is called, or who wrote it. */
+export async function updateBook(
+  bookId: string,
+  fields: { title: string; author: string },
+): Promise<void> {
+  const { error } = await supabase
+    .from('books')
+    .update({ title: fields.title.trim(), author: fields.author.trim() })
+    .eq('id', bookId)
+  if (error) throw error
+}
+
 /**
  * Delete a book, its chapters, and its audio.
  *
@@ -225,6 +302,11 @@ export async function deleteBook(bookId: string): Promise<void> {
     const { error: removeError } = await supabase.storage.from('audio').remove(paths)
     if (removeError) throw removeError
   }
+
+  // The cover lives in its own bucket and has no foreign key either.
+  const { data: covers } = await supabase.storage.from(COVER_BUCKET).list(bookId)
+  const coverPaths = (covers ?? []).map((file) => `${bookId}/${file.name}`)
+  if (coverPaths.length > 0) await supabase.storage.from(COVER_BUCKET).remove(coverPaths)
 
   const { error } = await supabase.from('books').delete().eq('id', bookId)
   if (error) throw error

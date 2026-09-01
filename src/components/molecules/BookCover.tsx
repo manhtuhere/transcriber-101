@@ -2,6 +2,8 @@ import { coverStyle } from '../../utils/cover'
 import { formatLength } from '../../utils/format'
 
 interface BookCoverProps {
+  /** A stored cover. Without one the book keeps its printed binding. */
+  coverUrl?: string
   title: string
   author?: string | null
   chapterCount: number
@@ -22,6 +24,7 @@ interface BookCoverProps {
  * what makes a shelf of these scannable rather than merely colourful.
  */
 export default function BookCover({
+  coverUrl,
   title,
   author,
   chapterCount,
@@ -30,6 +33,31 @@ export default function BookCover({
   size = 'sm',
 }: BookCoverProps) {
   const large = size === 'lg'
+
+  if (coverUrl) {
+    return (
+      <div
+        className={`book-block group-hover:book-block-raised relative aspect-[5/7]
+          overflow-hidden rounded-[2px_5px_5px_2px] bg-linen
+          transition-transform duration-200 group-hover:-translate-y-[3px]
+          motion-reduce:transition-none motion-reduce:group-hover:translate-y-0
+          ${large ? 'w-40 shrink-0' : ''}`}
+      >
+        {/*
+          Decorative: the title sits beside the cover as text, so describing the
+          artwork here would only repeat it.
+        */}
+        <img src={coverUrl} alt="" className="h-full w-full object-cover" />
+
+        {percent > 0 && (
+          <div className="absolute inset-x-0 bottom-0 h-1 bg-ink/25">
+            <span className="block h-full bg-ochre" style={{ width: `${percent}%` }} />
+          </div>
+        )}
+      </div>
+    )
+  }
+
   const band = `flex items-center justify-between gap-2 px-2.5 font-data uppercase
     tracking-[0.1em] text-card/85 ${large ? 'py-2 text-[0.62rem]' : 'py-1.5 text-[0.52rem]'}`
 

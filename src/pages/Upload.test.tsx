@@ -14,7 +14,7 @@ vi.mock('@tanstack/react-router', async (original) => {
   return { ...actual, useNavigate: () => navigate }
 })
 
-vi.mock('../lib/api', () => ({ createBook: vi.fn() }))
+vi.mock('../lib/api', () => ({ createBook: vi.fn(), uploadCover: vi.fn() }))
 const api = vi.mocked(await import('../lib/api'))
 
 const here = dirname(fileURLToPath(import.meta.url))
@@ -198,5 +198,58 @@ describe('Upload queueing', () => {
     await userEvent.click(queue)
 
     expect(api.createBook).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('Cover on upload', () => {
+  const fill = async () => {
+    await dropBook()
+    await userEvent.type(await screen.findByLabelText(/^title/i), 'Moby-Dick')
+    await userEvent.type(screen.getByLabelText(/^author/i), 'Melville')
+  }
+
+  const coverFile = () =>
+    new File([new Uint8Array(10)], 'cover.jpg', { type: 'image/jpeg' })
+
+  test('a book can be queued without one', async () => {
+    api.createBook.mockResolvedValue('b1')
+    await renderWithProviders(<Upload />)
+    await fill()
+    await userEvent.click(screen.getByRole('button', { name: /save & queue/i }))
+
+    await waitFor(() => expect(navigate).toHaveBeenCalled())
+    expect(api.uploadCover).not.toHaveBeenCalled()
+  })
+
+  // The storage path is keyed by book id, so there is nothing to upload against
+  // until the insert comes back.
+  test('uploads the cover after the book exists, against the new id', async () => {
+    api.createBook.mockResolvedValue('b7')
+    api.uploadCover.mockResolvedValue(undefined)
+    await renderWithProviders(<Upload />)
+    await fill()
+
+    const cover = coverFile()
+    await userEvent.upload(screen.getByLabelText(/cover/i), cover, { applyAccept: false })
+    await userEvent.click(screen.getByRole('button', { name: /save & queue/i }))
+
+    await waitFor(() => expect(api.uploadCover).toHaveBeenCalledWith('b7', cover))
+    expect(api.createBook).toHaveBeenCalledBefore(api.uploadCover)
+  })
+
+  // The transcript is already queued by then. Sending the reader back to a form
+  // that would queue it again would be worse than a missing cover.
+  test('still opens the book when the cover fails to upload', async () => {
+    api.createBook.mockResolvedValue('b7')
+    api.uploadCover.mockRejectedValue(new Error('storage is full'))
+    await renderWithProviders(<Upload />)
+    await fill()
+
+    await userEvent.upload(screen.getByLabelText(/cover/i), coverFile(), { applyAccept: false })
+    await userEvent.click(screen.getByRole('button', { name: /save & queue/i }))
+
+    await waitFor(() =>
+      expect(navigate).toHaveBeenCalledWith({ to: '/books/$id', params: { id: 'b7' } }),
+    )
   })
 })

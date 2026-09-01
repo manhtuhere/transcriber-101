@@ -9,10 +9,17 @@ interface BookCardProps {
   book: BookSummary
   /** Saved listening position in seconds, 0 if never opened. */
   position: number
+  /** A stored cover, if the book has one. */
+  coverUrl?: string
   onToggleFavorite: (bookId: string, favorite: boolean) => void
 }
 
-export default function BookCard({ book, position, onToggleFavorite }: BookCardProps) {
+export default function BookCard({
+  book,
+  position,
+  coverUrl,
+  onToggleFavorite,
+}: BookCardProps) {
   const chapterCount = book.chapters[0]?.count ?? 0
   const ready = book.status === 'ready'
   const total = book.total_duration_sec ?? 0
@@ -36,6 +43,7 @@ export default function BookCard({ book, position, onToggleFavorite }: BookCardP
         className="group block rounded-sm text-inherit no-underline"
       >
         <BookCover
+          coverUrl={coverUrl}
           title={book.title}
           author={book.author}
           chapterCount={chapterCount}

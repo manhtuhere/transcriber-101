@@ -6,6 +6,7 @@ import BookCover from '../molecules/BookCover'
 interface ContinueListeningProps {
   book: BookSummary
   position: number
+  coverUrl?: string
 }
 
 /**
@@ -14,7 +15,11 @@ interface ContinueListeningProps {
  * Everything here answers one question — how much is left, and where do I press
  * to carry on — so the shelf below it can stay a browsing surface.
  */
-export default function ContinueListening({ book, position }: ContinueListeningProps) {
+export default function ContinueListening({
+  book,
+  position,
+  coverUrl,
+}: ContinueListeningProps) {
   const total = book.total_duration_sec ?? 0
   const percent = percentComplete(position, total)
   const chapterCount = book.chapters[0]?.count ?? 0
@@ -33,6 +38,7 @@ export default function ContinueListening({ book, position }: ContinueListeningP
 
       <div className="mt-5 flex flex-col items-start gap-6 sm:flex-row sm:items-center sm:gap-8">
         <BookCover
+          coverUrl={coverUrl}
           title={book.title}
           author={book.author}
           chapterCount={chapterCount}

@@ -2,14 +2,20 @@ import { useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import Alert from '../components/atoms/Alert'
 import Button from '../components/atoms/Button'
+import CoverPicker from '../components/molecules/CoverPicker'
+import DropZone from '../components/molecules/DropZone'
 import EstimateSummary from '../components/molecules/EstimateSummary'
-import FilePicker from '../components/molecules/FilePicker'
 import BookMetaForm from '../components/organisms/BookMetaForm'
 import ChapterTable from '../components/organisms/ChapterTable'
 import PageShell from '../components/templates/PageShell'
-import { MAX_BOOK_CHARS, MAX_UPLOAD_BYTES } from '../constants/upload'
+import {
+  ACCEPTED_UPLOAD_TYPES,
+  MAX_BOOK_CHARS,
+  MAX_UPLOAD_BYTES,
+} from '../constants/upload'
 import { DEFAULT_VOICE } from '../constants/voices'
 import { useCreateBook } from '../hooks/useCreateBook'
+import { useUploadCoverFor } from '../hooks/useUploadCover'
 import type { ParsedChapter } from '../types/book'
 import { buildBookDraft } from '../utils/buildInsert'
 import { estimateCost, estimateRuntime } from '../utils/estimate'
@@ -25,12 +31,39 @@ export default function Upload() {
   const [title, setTitle] = useState('')
   const [author, setAuthor] = useState('')
   const [voice, setVoice] = useState<string>(DEFAULT_VOICE)
+  const [cover, setCover] = useState<File | null>(null)
+  const [fileName, setFileName] = useState<string | null>(null)
   const navigate = useNavigate()
 
   const queue = useCreateBook()
+  const putCover = useUploadCoverFor()
+
+  /*
+    The cover is uploaded after the book row exists, never before: its storage
+    path is keyed by book id, and there is no id until the insert returns. A
+    failed cover is reported but does not block the book — the transcript is
+    already queued by then, and sending the reader back to a form that would
+    re-queue it would be worse than a book that starts out with its printed
+    binding.
+  */
+  function queueBook() {
+    queue.mutate(buildBookDraft({ title, author, voice }, chapters), {
+      onSuccess: async (id) => {
+        if (cover) {
+          try {
+            await putCover.mutateAsync({ bookId: id, file: cover })
+          } catch {
+            // Surfaced on the book's own page, where it can be retried.
+          }
+        }
+        void navigate({ to: '/books/$id', params: { id } })
+      },
+    })
+  }
 
   async function onSelect(file: File) {
     setChapters([])
+    setFileName(null)
 
     if (!isTextFile(file)) {
       setError('That file type is not supported. Upload a .txt or .md file.')
@@ -55,6 +88,7 @@ export default function Upload() {
     }
 
     setError(null)
+    setFileName(file.name)
     setChapters(parsed)
   }
 
@@ -78,14 +112,24 @@ export default function Upload() {
   const { usd } = estimateCost(totalChars, voice)
   const { seconds } = estimateRuntime(totalChars)
   const ready =
-    chapters.length > 0 && title.trim() !== '' && author.trim() !== '' && !queue.isPending
+    chapters.length > 0 &&
+    title.trim() !== '' &&
+    author.trim() !== '' &&
+    !queue.isPending &&
+    !putCover.isPending
 
   return (
     <PageShell
       title="Add a book"
       lede="Drop in a transcript and it comes back as an audiobook. Chapters are split on a line of 19 equals signs."
     >
-      <FilePicker label="Book file" onSelect={onSelect} />
+      <DropZone
+        label="Book file"
+        hint="Drop a .txt or .md transcript here, up to 5 MB."
+        accept={ACCEPTED_UPLOAD_TYPES}
+        chosen={fileName}
+        onSelect={onSelect}
+      />
 
       {error && <Alert>{error}</Alert>}
       {queue.error && <Alert>{queue.error.message}</Alert>}
@@ -108,6 +152,8 @@ export default function Upload() {
             onVoiceChange={setVoice}
           />
 
+          <CoverPicker onSelect={setCover} />
+
           <ChapterTable
             chapters={chapters}
             onRename={renameChapter}
@@ -121,15 +167,8 @@ export default function Upload() {
             seconds={seconds}
           />
 
-          <Button
-            disabled={!ready}
-            onClick={() =>
-              queue.mutate(buildBookDraft({ title, author, voice }, chapters), {
-                onSuccess: (id) => void navigate({ to: '/books/$id', params: { id } }),
-              })
-            }
-          >
-            {queue.isPending ? 'Saving…' : 'Save & queue'}
+          <Button disabled={!ready} onClick={queueBook}>
+            {queue.isPending || putCover.isPending ? 'Saving…' : 'Save & queue'}
           </Button>
         </div>
       )}
