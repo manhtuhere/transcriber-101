@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '../../src/types/database'
 import { concatToMp3 } from './audio'
+import { DEFAULT_CONCURRENCY } from '../../src/constants/synthesis'
 import { chunkText } from './chunkText'
 import { synthesizeChunk } from './deepgram'
 import { buildManifest } from './manifest'
@@ -37,7 +38,7 @@ export interface SynthesizeDeps {
  */
 export async function synthesizeChapter(
   chapter: ChapterRow,
-  { supabase, deepgramApiKey, concurrency = 3 }: SynthesizeDeps,
+  { supabase, deepgramApiKey, concurrency = DEFAULT_CONCURRENCY }: SynthesizeDeps,
 ): Promise<void> {
   try {
     const pieces = chunkText(chapter.text_content)

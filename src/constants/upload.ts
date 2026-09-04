@@ -1,4 +1,17 @@
-export const MAX_UPLOAD_BYTES = 5 * 1024 * 1024
+/*
+  A pre-filter, not the real gate — MAX_BOOK_CHARS below is.
+
+  Its only job is to refuse a file before `file.text()` decodes the whole thing
+  into a string, which blocks the tab for seconds on something large. It was
+  5 MB, roughly ten times looser than the character cap it guards: every ASCII
+  file between 0.5 and 5 MB was read in full only to be rejected on characters
+  a moment later.
+
+  2 MB keeps headroom for text that is not one byte per character — 500k
+  characters of CJK is about 1.5 MB in UTF-8 — while still refusing anything
+  that cannot pass the character cap.
+*/
+export const MAX_UPLOAD_BYTES = 2 * 1024 * 1024
 
 export const ACCEPTED_UPLOAD_TYPES = '.txt,.md,text/plain,text/markdown'
 

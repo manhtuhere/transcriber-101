@@ -281,7 +281,7 @@ describe('A file too large to accept', () => {
     await renderWithProviders(<Upload />)
     await dropBook(huge)
 
-    expect(await screen.findByText(/limit is 5 MB/i)).toBeInTheDocument()
+    expect(await screen.findByText(/limit is 2 MB/i)).toBeInTheDocument()
   })
 
   test('leaves no half-parsed chapters behind', async () => {

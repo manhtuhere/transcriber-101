@@ -268,6 +268,11 @@ What it establishes, measured rather than assumed:
   ordering is the point — `file.text()` decodes the whole file into a string, so checking the
   size afterwards would block the tab for seconds on a file that was never going to be
   accepted. `Upload.test.tsx` pins it by spying on `text()`.
+
+  `MAX_UPLOAD_BYTES` is a pre-filter for exactly that, not the real gate — `MAX_BOOK_CHARS`
+  is. It sits at 2 MB rather than the character cap's ~0.5 MB of ASCII so that multi-byte
+  text still fits (500k CJK characters is about 1.5 MB in UTF-8). It was 5 MB, ten times
+  looser than the cap it guards.
 - Parsing is not the bottleneck. `splitChapters` handles 50 MB in about 150 ms for roughly
   110 MB of heap, and `chunkText` produces ~29,700 chunks from it in about 1.7 s.
 - **Cost is the real limit, not speed.** 50 MB is 105× `MAX_BOOK_CHARS` and would be about
@@ -279,6 +284,18 @@ What it establishes, measured rather than assumed:
   ratio stays well under quadratic in case that ever changes.
 
 ## The worker
+
+`DEFAULT_CONCURRENCY` in `src/constants/synthesis.ts` is the **single source of truth** for how
+many Deepgram requests are in flight at once: `scripts/lib/synthesize.ts` imports it instead of
+carrying its own default, and `estimateRuntime` divides by it. They were 3 and 4 respectively,
+so every estimate on the upload form promised a third more throughput than the worker could
+deliver. `scripts/lib/synthesize.test.ts` reads the source to keep them from drifting again —
+the value is a parameter default, so calling the function with an explicit concurrency would
+prove nothing about what `worker.ts` gets when it passes none.
+
+`CHARS_PER_SECOND` is still a guess and is marked as one. It implies about 2.3 minutes to
+synthesize a max-size book, which is 8.3 hours of audio — not credible. Fixing it wants real
+per-chapter timings, not another estimate.
 
 `npm run worker` claims pending chapters one at a time and synthesizes them. Claiming goes
 through the `claim_next_chapter` Postgres function, not a query: PostgREST has no row-locking

@@ -32,7 +32,7 @@ describe('a 50 MB transcript', () => {
   */
   test('is refused by the upload size cap', () => {
     expect(fixture.bytes).toBeGreaterThan(MAX_UPLOAD_BYTES)
-    expect(MAX_UPLOAD_BYTES / MB).toBe(5)
+    expect(MAX_UPLOAD_BYTES / MB).toBe(2)
   })
 
   test('would also blow the character cap by two orders of magnitude', () => {

@@ -125,7 +125,7 @@ export default function Upload() {
     >
       <DropZone
         label="Book file"
-        hint="Drop a .txt or .md transcript here, up to 5 MB."
+        hint={`Drop a .txt or .md transcript here, up to ${MAX_UPLOAD_BYTES / 1024 / 1024} MB.`}
         accept={ACCEPTED_UPLOAD_TYPES}
         chosen={fileName}
         onSelect={onSelect}
