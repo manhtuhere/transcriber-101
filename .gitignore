@@ -22,6 +22,9 @@ dist-ssr
 
 coverage
 
+# Generated 50 MB stress fixtures — built on demand, never committed
+/.stress-fixtures/
+
 # tsc --build incremental state
 *.tsbuildinfo
 

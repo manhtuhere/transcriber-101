@@ -233,6 +233,7 @@ TDD: the tests come first, and a phase is done when they pass.
 | Unit | `src/**/*.test.ts` | node — pure logic, no mocks |
 | UI | `src/**/*.test.tsx` | jsdom + Testing Library, `lib/api` mocked |
 | Integration | `test/integration/*.test.ts` | real Supabase, needs `SUPABASE_SECRET_KEY` |
+| Stress | `test/stress/*.test.ts` | node — **on demand only**, `npm run test:stress` |
 | E2E | `e2e/*.spec.ts` | real browser |
 
 The extension is the rule: `.ts` tests are pure and run in node, `.tsx` tests render and run
@@ -247,11 +248,35 @@ Requires **Node 22** (`.nvmrc`). Node 20 breaks jsdom 30, execa 10 and realtime-
 npm run typecheck     # tsc --build
 npm run test:run      # unit + UI
 npm run test:int      # integration (skips cleanly without a secret key)
+npm run test:stress   # 50 MB parse/chunk stress — on demand, never in CI
 npx playwright test --project=anon   # signed-out e2e, no key needed
 npm run lint
 npm run worker        # drain the pending-chapter queue (needs ffmpeg + keys)
 npm run clean:storage # remove audio whose book row is gone (--dry-run to preview)
 ```
+
+### Big files
+
+`npm run test:stress` is **not** in `test:run`, `test:all` or CI, and nothing else pulls the
+`stress` project in. It builds a 50 MB transcript into `.stress-fixtures/` (gitignored, cached
+between runs) and parses it repeatedly. Run it when the limits or the parsing functions
+change; leave it alone otherwise.
+
+What it establishes, measured rather than assumed:
+
+- **A 50 MB book is refused, and refused on `file.size` before anything reads it.** That
+  ordering is the point — `file.text()` decodes the whole file into a string, so checking the
+  size afterwards would block the tab for seconds on a file that was never going to be
+  accepted. `Upload.test.tsx` pins it by spying on `text()`.
+- Parsing is not the bottleneck. `splitChapters` handles 50 MB in about 150 ms for roughly
+  110 MB of heap, and `chunkText` produces ~29,700 chunks from it in about 1.7 s.
+- **Cost is the real limit, not speed.** 50 MB is 105× `MAX_BOOK_CHARS` and would be about
+  $1,570 of Aura-2 synthesis. That is what the character cap exists to prevent, and why
+  raising it needs a decision rather than a bigger number.
+- The pathological shapes — no delimiters, no newlines, no sentence terminators, and a single
+  token megabytes long — are all linear. `hardSplit` re-slices the remainder each pass, which
+  would be quadratic if V8 copied the string; it does not, and a test asserts the 1 MB → 4 MB
+  ratio stays well under quadratic in case that ever changes.
 
 ## The worker
 

@@ -32,6 +32,26 @@ export default defineConfig({
           hookTimeout: 30000,
         },
       },
+      /*
+        Big-file stress, run only when asked for: `npm run test:stress`.
+
+        Deliberately in no other script. It builds a 50 MB fixture and parses
+        it several times over, which takes minutes and a gigabyte of heap —
+        nobody wants that on every save, and it would dominate CI for a path
+        the upload cap refuses anyway.
+      */
+      {
+        test: {
+          name: 'stress',
+          environment: 'node',
+          include: ['test/stress/**/*.test.ts'],
+          testTimeout: 300_000,
+          hookTimeout: 300_000,
+          // One file at a time: two 50 MB books in parallel measures the
+          // machine's swap rate rather than the parser.
+          fileParallelism: false,
+        },
+      },
     ],
     coverage: {
       provider: 'v8',

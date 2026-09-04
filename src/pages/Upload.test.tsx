@@ -253,3 +253,46 @@ describe('Cover on upload', () => {
     )
   })
 })
+
+describe('A file too large to accept', () => {
+  /*
+    The guard that keeps a 50 MB drop from freezing the tab. `file.text()`
+    decodes the whole thing into a string before returning, so reading first
+    and checking the size afterwards would block for seconds on a file that
+    was never going to be accepted. `test/stress` measures what that costs;
+    this pins the ordering that avoids paying it.
+  */
+  test('is rejected without ever being read', async () => {
+    const huge = new File(['x'], 'huge.txt', { type: 'text/plain' })
+    Object.defineProperty(huge, 'size', { value: 50 * 1024 * 1024 })
+    const read = vi.spyOn(huge, 'text')
+
+    await renderWithProviders(<Upload />)
+    await dropBook(huge)
+
+    expect(await screen.findByText(/too large/i)).toBeInTheDocument()
+    expect(read).not.toHaveBeenCalled()
+  })
+
+  test('says what the limit is, so the message is actionable', async () => {
+    const huge = new File(['x'], 'huge.txt', { type: 'text/plain' })
+    Object.defineProperty(huge, 'size', { value: MAX_UPLOAD_BYTES + 1 })
+
+    await renderWithProviders(<Upload />)
+    await dropBook(huge)
+
+    expect(await screen.findByText(/limit is 5 MB/i)).toBeInTheDocument()
+  })
+
+  test('leaves no half-parsed chapters behind', async () => {
+    await renderWithProviders(<Upload />)
+    await dropBook()
+    expect(await screen.findByLabelText('Chapter 1 title')).toBeInTheDocument()
+
+    const huge = new File(['x'], 'huge.txt', { type: 'text/plain' })
+    Object.defineProperty(huge, 'size', { value: 50 * 1024 * 1024 })
+    await dropBook(huge)
+
+    expect(chapterRows()).toHaveLength(0)
+  })
+})
