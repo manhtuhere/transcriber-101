@@ -162,53 +162,6 @@ export type Database = {
           },
         ]
       }
-      chunks: {
-        Row: {
-          audio_path: string | null
-          chapter_id: string
-          created_at: string
-          id: string
-          idx: number
-          owner_id: string
-          status: string
-          text: string
-          text_hash: string
-          tts_voice: string
-        }
-        Insert: {
-          audio_path?: string | null
-          chapter_id: string
-          created_at?: string
-          id?: string
-          idx: number
-          owner_id?: string
-          status?: string
-          text: string
-          text_hash: string
-          tts_voice: string
-        }
-        Update: {
-          audio_path?: string | null
-          chapter_id?: string
-          created_at?: string
-          id?: string
-          idx?: number
-          owner_id?: string
-          status?: string
-          text?: string
-          text_hash?: string
-          tts_voice?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'chunks_chapter_id_fkey'
-            columns: ['chapter_id']
-            isOneToOne: false
-            referencedRelation: 'chapters'
-            referencedColumns: ['id']
-          },
-        ]
-      }
     }
     Views: Record<never, never>
     Functions: {
