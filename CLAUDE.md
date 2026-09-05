@@ -219,6 +219,13 @@ Both were found by testing in a real browser; neither shows up in jsdom.
 `bookmarks` stores a spot in **book** seconds, not chapter seconds, matching the chapter-marker
 scheme — the player resolves it with `toChapterPosition`, so a bookmark seeks across files.
 
+Every policy calls `(select auth.uid())`, never a bare `auth.uid()`. The subselect is hoisted
+into an InitPlan and evaluated once per statement; bare, it is re-evaluated for every row
+scanned, which on a book of hundreds of chapters is hundreds of GUC reads per query. Migration
+0010 converted the three policies and indexed `chapters.owner_id` and `bookmarks.owner_id`,
+which every RLS check filters on. It used `alter policy` rather than drop-and-recreate, so
+there was never a window with no policy on the table.
+
 Its RLS policy carries the parent `EXISTS` check from the start. Without it, `owner_id`
 defaulting to `auth.uid()` lets anyone attach a row to someone else's book: invisible to that
 book's owner, but still there. That is the hole migration 0005 had to close on `chapters` and
